@@ -135,25 +135,76 @@ public class StockServiceTest {
      */
     @Test
     void shouldCalculateVWSP() {
-        // Arrange: Mock the Stock object (only mock necessary methods)
-        Stock stock = mock(Stock.class);
+        // Arrange: Create spy on stock objects
+        Stock stock1 = spy(new Stock("Stock1", "COMMON", 0, 0, 100));
+        Stock stock2 = spy(new Stock("Stock2", "PREFERRED", 5, 0.05, 100));
 
-        // Create Trade objects with required fields
-        Trade trade1 = new Trade("Pepsi", LocalDateTime.now().minusMinutes(3), 10, true, 100, stock);
-        Trade trade2 = new Trade("Pepsi", LocalDateTime.now().minusMinutes(2), 5, false, 110, stock);
-        Trade trade3 = new Trade("Pepsi", LocalDateTime.now().minusMinutes(1), 15, true, 120, stock);
+        // Mock the repository to return the stocks when searched by symbol
+        when(stockRepository.findBySymbol("Stock1")).thenReturn(Optional.of(stock1));
+        when(stockRepository.findBySymbol("Stock2")).thenReturn(Optional.of(stock2));
 
-        // Mock repository return value
-        when(stockRepository.findBySymbol("Pepsi")).thenReturn(Optional.of(stock));
+        // Create mock trades
+        Trade trade1 = new Trade("Stock1", LocalDateTime.now().minusMinutes(3), 10, true, 100, stock1);
+        Trade trade2 = new Trade("Stock1", LocalDateTime.now().minusMinutes(1), 20, true, 110, stock1);
+        Trade trade3 = new Trade("Stock2", LocalDateTime.now().minusMinutes(3), 5, true, 120, stock2);
+        Trade trade4 = new Trade("Stock2", LocalDateTime.now().minusMinutes(1), 15, true, 130, stock2);
 
-        // Mock the getTrades() method of the Stock object
-        when(stock.getTrades()).thenReturn(List.of(trade1, trade2, trade3));
+        // Mock the trades return value for each stock
+        doReturn(List.of(trade1, trade2)).when(stock1).getTrades();
+        doReturn(List.of(trade3, trade4)).when(stock2).getTrades();
 
         // Act: Call the method to calculate VWSP
-        double vwsp = stockService.calculateVWSP("Pepsi");
+        double vwspStock1 = stockService.calculateVWSP("Stock1");
+        double vwspStock2 = stockService.calculateVWSP("Stock2");
 
-        // Assert: Verify the calculated VWSP is correct
-        assertEquals(111.66666666666667, vwsp, 0.001); // Correct expected value based on the calculation
+        // Assert: Verify the calculated VWSP is correct for each stock
+        assertEquals(106.66666666666667, vwspStock1, 0.001); // Corrected expected VWSP for Stock1
+        assertEquals(127.5, vwspStock2, 0.001); // Corrected expected VWSP for Stock2
     }
+
+    /**
+     * Test the calculation of the GBCE All Share Index.
+     * Verifies that the GBCE All Share Index is correctly calculated.
+     */
+    @Test
+    void shouldCalculateGBCEAllShareIndex() {
+        // Arrange: Create spy stocks
+        Stock stock1 = spy(new Stock("Stock1", "COMMON", 0, 0, 100));
+        Stock stock2 = spy(new Stock("Stock2", "PREFERRED", 5, 0.05, 100));
+
+        // Mock trades for each stock
+        Trade trade1 = new Trade("Stock1", LocalDateTime.now().minusMinutes(3), 10, true, 100, stock1);
+        Trade trade2 = new Trade("Stock1", LocalDateTime.now().minusMinutes(1), 20, true, 110, stock1);
+        Trade trade3 = new Trade("Stock2", LocalDateTime.now().minusMinutes(3), 5, true, 120, stock2);
+        Trade trade4 = new Trade("Stock2", LocalDateTime.now().minusMinutes(1), 15, true, 130, stock2);
+
+        // Mock the trades return value for each stock
+        doReturn(List.of(trade1, trade2)).when(stock1).getTrades();
+        doReturn(List.of(trade3, trade4)).when(stock2).getTrades();
+
+        // Mock repository returns
+        when(stockRepository.findBySymbol("Stock1")).thenReturn(Optional.of(stock1));
+        when(stockRepository.findBySymbol("Stock2")).thenReturn(Optional.of(stock2));
+        when(stockRepository.findAll()).thenReturn(List.of(stock1, stock2));  // Mock all stocks
+
+        // Act: Call the method to calculate VWSP for each stock first
+        double vwspStock1 = stockService.calculateVWSP("Stock1");
+        double vwspStock2 = stockService.calculateVWSP("Stock2");
+
+        // Log the VWSP values for debugging purposes
+        System.out.println("VWSP Stock1: " + vwspStock1);
+        System.out.println("VWSP Stock2: " + vwspStock2);
+
+        // Act: Now calculate the GBCE All Share Index based on VWSP values
+        double gbceAllShareIndex = stockService.calculateGBCEAllShareIndex();
+
+        // Log the GBCE value for debugging
+        System.out.println("GBCE All Share Index: " + gbceAllShareIndex);
+
+        // Assert: Verify the GBCE All Share Index is correctly calculated
+        double expectedIndex = Math.pow(vwspStock1 * vwspStock2, 1.0 / 2); // Geometric mean of VWSP values
+        assertEquals(expectedIndex, gbceAllShareIndex, 0.001);
+    }
+
 
 }

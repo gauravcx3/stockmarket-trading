@@ -118,4 +118,30 @@ public class StockServiceImpl implements StockService {
 
         return totalValue / totalQuantity;
     }
+
+    /**
+     * Calculates the GBCE All Share Index using the geometric mean of the volume-weighted average prices (VWSP) of all stocks.
+     *
+     * @return The GBCE All Share Index as a double.
+     */
+    @Override
+    public double calculateGBCEAllShareIndex() {
+        List<Stock> stocks = stockRepository.findAll();  // Ensure you fetch all stocks
+        double productOfVWSP = 1.0;
+        int count = 0;
+
+        // Loop through all stocks to get their VWSP and multiply
+        for (Stock stock : stocks) {
+            double vwsp = calculateVWSP(stock.getSymbol());  // Calculate VWSP for each stock
+            productOfVWSP *= vwsp;
+            count++;
+        }
+
+        // Calculate the geometric mean
+        if (count > 0) {
+            return Math.pow(productOfVWSP, 1.0 / count);  // Geometric mean formula
+        } else {
+            return 0.0;  // If no stocks exist
+        }
+    }
 }

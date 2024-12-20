@@ -5,7 +5,8 @@ import com.globalbeverage.stockmarket.exception.StockNotFoundException;
 
 /**
  * Service interface for calculating financial metrics related to stocks.
- * Provides methods for calculating dividend yield, P/E ratio, and volume-weighted average price (VWAP).
+ * Provides methods for calculating dividend yield, P/E ratio, volume-weighted average price (VWAP),
+ * and the GBCE All Share Index.
  */
 public interface StockService {
 
@@ -41,4 +42,12 @@ public interface StockService {
      * @throws StockNotFoundException if the stock is not found in the repository.
      */
     double calculateVWSP(String symbol) throws StockNotFoundException;
+
+    /**
+     * Calculates the GBCE All Share Index using the geometric mean of the volume-weighted average prices (VWSP) of all stocks.
+     * The GBCE All Share Index is a measure of the overall market performance.
+     *
+     * @return The GBCE All Share Index as a double.
+     */
+    double calculateGBCEAllShareIndex();
 }
