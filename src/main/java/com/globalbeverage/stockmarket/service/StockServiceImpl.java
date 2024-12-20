@@ -78,10 +78,15 @@ public class StockServiceImpl implements StockService {
             throw new InvalidPriceException();
         }
 
-        if (stock.getLastDividend() == 0) return 0;
+        // If no dividend, return NaN
+        if (stock.getLastDividend() == 0) {
+            logger.warn("No dividend for stock with symbol {}. Returning NaN for P/E ratio.", symbol);
+            return Double.NaN;
+        }
 
         return price / stock.getLastDividend();
     }
+
 
     /**
      * Calculates the volume-weighted average price (VWAP) for a given stock based on its trades in the last 5 minutes.

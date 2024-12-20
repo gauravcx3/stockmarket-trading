@@ -1,6 +1,7 @@
 package com.globalbeverage.stockmarket.stock;
 
 import com.globalbeverage.stockmarket.domain.Stock;
+import com.globalbeverage.stockmarket.domain.StockType;
 import com.globalbeverage.stockmarket.exception.InvalidPriceException;
 import com.globalbeverage.stockmarket.exception.StockNotFoundException;
 import com.globalbeverage.stockmarket.repository.StockRepository;
@@ -42,7 +43,7 @@ public class StockExceptionTest {
     @Test
     void shouldThrowInvalidPriceExceptionWhenPriceIsInvalid() {
         // Arrange: Mock the repository to return a valid stock (even though the price will be invalid)
-        Stock mockStock = new Stock("Coca Cola", "COMMON", 10.0, 0.0, 100.0);
+        Stock mockStock = new Stock("Coca Cola", StockType.COMMON, 10.0, 0.0, 100.0);
         when(stockRepository.findBySymbol("Coca Cola")).thenReturn(Optional.of(mockStock));
 
         // Act & Assert: Verify that InvalidPriceException is thrown when price is invalid (negative in this case)
@@ -57,7 +58,7 @@ public class StockExceptionTest {
     @Test
     void shouldNotThrowExceptionForValidPrice() {
         // Arrange: Mock stock data
-        Stock mockStock = new Stock("Coca Cola", "COMMON", 10.0, 0.0, 100.0);
+        Stock mockStock = new Stock("Coca Cola", StockType.COMMON, 10.0, 0.0, 100.0);
         when(stockRepository.findBySymbol("Coca Cola")).thenReturn(Optional.of(mockStock));
 
         // Act & Assert: Ensure that no exception is thrown when a valid price is provided.

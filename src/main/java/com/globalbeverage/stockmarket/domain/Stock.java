@@ -31,7 +31,8 @@ public class Stock {
     private String symbol;          // Stock symbol (e.g., TEA, POP)
 
     @NotNull(message = "Stock type cannot be null") // Ensures the stock type is provided
-    private String type;            // Type of the stock ("COMMON" or "PREFERRED")
+    @Enumerated(EnumType.STRING)  // Ensures the enum is stored as a string in the database
+    private StockType type;            // Type of the stock (COMMON or PREFERRED)
 
     @Min(value = 0, message = "Last dividend must be non-negative") // Ensures lastDividend is non-negative
     private double lastDividend;    // Last dividend in pennies (for COMMON)
@@ -53,7 +54,7 @@ public class Stock {
      * @param fixedDividend   The fixed dividend for PREFERRED stock.
      * @param parValue        The par value of the stock.
      */
-    public Stock(String symbol, String type, double lastDividend, double fixedDividend, double parValue) {
+    public Stock(String symbol, StockType type, double lastDividend, double fixedDividend, double parValue) {
         this.symbol = symbol;
         this.type = type;
         this.lastDividend = lastDividend;
@@ -90,7 +91,7 @@ public class Stock {
         return "Stock{" +
                 "id=" + id +
                 ", symbol='" + symbol + '\'' +
-                ", type='" + type + '\'' +
+                ", type=" + type +
                 ", lastDividend=" + lastDividend +
                 ", fixedDividend=" + fixedDividend +
                 ", parValue=" + parValue +

@@ -1,6 +1,7 @@
 package com.globalbeverage.stockmarket.config;
 
 import com.globalbeverage.stockmarket.domain.Stock;
+import com.globalbeverage.stockmarket.domain.StockType;
 import com.globalbeverage.stockmarket.repository.StockRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,7 +65,7 @@ class DataLoaderTest {
      */
     @Test
     void testValidationWithInvalidData() throws Exception {
-        Stock invalidStock = new Stock("INVALID", "COMMON", -10.0, -5.0, -100.0);
+        Stock invalidStock = new Stock("INVALID", StockType.COMMON, -10.0, -5.0, -100.0);
         List<Stock> stockList = Arrays.asList(invalidStock);
 
         // Use reflection to access the private validateAndFilterStocks method
@@ -97,11 +98,11 @@ class DataLoaderTest {
     void testBatchProcessing() throws Exception {
         // Arrange: Prepare a list of 5 stocks to be saved in batches.
         List<Stock> stocksToSave = Arrays.asList(
-                new Stock(null, "TEA", "COMMON", 0.0, 0.0, 100.0),
-                new Stock(null, "POP", "COMMON", 8.0, 0.0, 100.0),
-                new Stock(null, "ALE", "COMMON", 23.0, 0.0, 60.0),
-                new Stock(null, "GIN", "PREFERRED", 8.0, 2.0, 100.0),
-                new Stock(null, "JOE", "COMMON", 13.0, 0.0, 250.0)
+                new Stock(null, "TEA", StockType.COMMON, 0.0, 0.0, 100.0),
+                new Stock(null, "POP", StockType.COMMON, 8.0, 0.0, 100.0),
+                new Stock(null, "ALE", StockType.COMMON, 23.0, 0.0, 60.0),
+                new Stock(null, "GIN", StockType.PREFERRED, 8.0, 2.0, 100.0),
+                new Stock(null, "JOE", StockType.COMMON, 13.0, 0.0, 250.0)
         );
 
         // Use reflection to access the private saveStocksInBatches method

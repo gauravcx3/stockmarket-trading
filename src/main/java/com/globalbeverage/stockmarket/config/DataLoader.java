@@ -1,6 +1,7 @@
 package com.globalbeverage.stockmarket.config;
 
 import com.globalbeverage.stockmarket.domain.Stock;
+import com.globalbeverage.stockmarket.domain.StockType;
 import com.globalbeverage.stockmarket.repository.StockRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,11 +103,11 @@ public class DataLoader {
      */
     private List<Stock> getPresetData() {
         return List.of(
-                new Stock("TEA", "COMMON", 0.0, 0.0, 100.0),
-                new Stock("POP", "COMMON", 8.0, 0.0, 100.0),
-                new Stock("ALE", "COMMON", 23.0, 0.0, 60.0),
-                new Stock("GIN", "PREFERRED", 8.0, 2.0, 100.0),
-                new Stock("JOE", "COMMON", 13.0, 0.0, 250.0)
+                new Stock("TEA", StockType.COMMON, 0.0, 0.0, 100.0),
+                new Stock("POP", StockType.COMMON, 8.0, 0.0, 100.0),
+                new Stock("ALE", StockType.COMMON, 23.0, 0.0, 60.0),
+                new Stock("GIN", StockType.PREFERRED, 8.0, 2.0, 100.0),
+                new Stock("JOE", StockType.COMMON, 13.0, 0.0, 250.0)
         );
     }
 
@@ -122,7 +123,7 @@ public class DataLoader {
         for (int i = 0; i < 1000; i++) {
             stockList.add(new Stock(
                     "TICKER" + i,
-                    random.nextBoolean() ? "COMMON" : "PREFERRED",
+                    random.nextBoolean() ? StockType.COMMON : StockType.PREFERRED,
                     random.nextDouble() * 50,
                     random.nextDouble() * 5,
                     random.nextDouble() * 500

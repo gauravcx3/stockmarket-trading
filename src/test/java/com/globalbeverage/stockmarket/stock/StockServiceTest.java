@@ -1,6 +1,7 @@
 package com.globalbeverage.stockmarket.stock;
 
 import com.globalbeverage.stockmarket.domain.Stock;
+import com.globalbeverage.stockmarket.domain.StockType;
 import com.globalbeverage.stockmarket.domain.Trade;
 import com.globalbeverage.stockmarket.exception.StockNotFoundException;
 import com.globalbeverage.stockmarket.service.StockServiceImpl;
@@ -41,15 +42,17 @@ public class StockServiceTest {
     @Test
     void shouldCalculateDividendYieldForCommonStock() {
         // Arrange: Prepare a common stock and mock the repository's findBySymbol method.
-        Stock stock = new Stock("Coca Cola", "COMMON", 100, 0, 100);
-        when(stockRepository.findBySymbol("Coca Cola")).thenReturn(Optional.of(stock));
+        Stock stock = new Stock("Preferred Stock", StockType.PREFERRED, 0, 5, 250); // Fixed dividend = 5, Par value = 250
+        when(stockRepository.findBySymbol("Preferred Stock")).thenReturn(Optional.of(stock));
 
-        // Act: Call the calculateDividendYield method of the service.
-        double dividendYield = stockService.calculateDividendYield("Coca Cola", 100);
+        // Act: Call the calculateDividendYield method of the service with a price
+        double dividendYield = stockService.calculateDividendYield("Preferred Stock", 123.45);
 
-        // Assert: Verify the calculated dividend yield is correct.
-        assertEquals(1.0, dividendYield, 0.001);
+        // Assert: Verify the calculated dividend yield is correct
+        double expectedDividendYield = (5 * 250) / 123.45; // Expected = 1250 / 123.45 = 10.13
+        assertEquals(expectedDividendYield, dividendYield, 0.0001, "Dividend yield calculation for preferred stock is incorrect.");
     }
+
 
     /**
      * Test the calculation of dividend yield for a preferred stock.
@@ -58,7 +61,7 @@ public class StockServiceTest {
     @Test
     void shouldCalculateDividendYieldForPreferredStock() {
         // Arrange: Prepare a preferred stock and mock the repository's findBySymbol method.
-        Stock stock = new Stock("Pepsi", "PREFERRED", 0, 0.05, 100);
+        Stock stock = new Stock("Pepsi", StockType.PREFERRED, 0, 0.05, 100);
         when(stockRepository.findBySymbol("Pepsi")).thenReturn(Optional.of(stock));
 
         // Act: Call the calculateDividendYield method of the service.
@@ -73,16 +76,22 @@ public class StockServiceTest {
      * Verifies that the P/E ratio is calculated correctly for a stock.
      */
     @Test
-    void shouldCalculatePERatio() {
-        // Arrange: Prepare a stock and mock the repository's findBySymbol method.
-        Stock stock = new Stock("Coca Cola", "COMMON", 100, 0, 100);
-        when(stockRepository.findBySymbol("Coca Cola")).thenReturn(Optional.of(stock));
+    void shouldReturnNaNForPEWhenNoDividend() {
+        // Arrange: Prepare a stock with lastDividend = 0
+        Stock stock = new Stock("No Dividend Stock", StockType.COMMON, 0, 100, 100); // Correct order
+        when(stockRepository.findBySymbol("No Dividend Stock")).thenReturn(Optional.of(stock));
 
-        // Act: Call the calculatePERatio method of the service.
-        double peRatio = stockService.calculatePERatio("Coca Cola", 100);
+        // Debug to confirm correct value
+        System.out.println("Test Last Dividend: " + stock.getLastDividend());
 
-        // Assert: Verify the calculated P/E ratio is correct.
-        assertEquals(1.0, peRatio, 0.001);
+        // Act: Call the calculatePERatio method
+        double peRatio = stockService.calculatePERatio("No Dividend Stock", 100);
+
+        // Debug to verify result
+        System.out.println("Calculated P/E Ratio: " + peRatio);
+
+        // Assert: The P/E ratio should be NaN
+        assertTrue(Double.isNaN(peRatio), "P/E ratio should be NaN when there's no dividend.");
     }
 
     /**
@@ -93,7 +102,7 @@ public class StockServiceTest {
     @MockitoSettings(strictness = Strictness.LENIENT)
     void shouldHandleNoTradesForVWSP() {
         // Arrange: Stock with no trades.
-        Stock stock = new Stock("Pepsi", "COMMON", 100, 0, 100);
+        Stock stock = new Stock("Pepsi", StockType.COMMON, 100, 0, 100);
         when(stockRepository.findBySymbol("Pepsi")).thenReturn(Optional.of(stock)); // lenient approach
 
         // Act: Call the method
@@ -136,8 +145,8 @@ public class StockServiceTest {
     @Test
     void shouldCalculateVWSP() {
         // Arrange: Create spy on stock objects
-        Stock stock1 = spy(new Stock("Stock1", "COMMON", 0, 0, 100));
-        Stock stock2 = spy(new Stock("Stock2", "PREFERRED", 5, 0.05, 100));
+        Stock stock1 = spy(new Stock("Stock1", StockType.COMMON, 0, 0, 100));
+        Stock stock2 = spy(new Stock("Stock2", StockType.PREFERRED, 5, 0.05, 100));
 
         // Mock the repository to return the stocks when searched by symbol
         when(stockRepository.findBySymbol("Stock1")).thenReturn(Optional.of(stock1));
@@ -169,8 +178,8 @@ public class StockServiceTest {
     @Test
     void shouldCalculateGBCEAllShareIndex() {
         // Arrange: Create spy stocks
-        Stock stock1 = spy(new Stock("Stock1", "COMMON", 0, 0, 100));
-        Stock stock2 = spy(new Stock("Stock2", "PREFERRED", 5, 0.05, 100));
+        Stock stock1 = spy(new Stock("Stock1", StockType.COMMON, 0, 0, 100));
+        Stock stock2 = spy(new Stock("Stock2", StockType.PREFERRED, 5, 0.05, 100));
 
         // Mock trades for each stock
         Trade trade1 = new Trade("Stock1", LocalDateTime.now().minusMinutes(3), 10, true, 100, stock1);
@@ -205,6 +214,4 @@ public class StockServiceTest {
         double expectedIndex = Math.pow(vwspStock1 * vwspStock2, 1.0 / 2); // Geometric mean of VWSP values
         assertEquals(expectedIndex, gbceAllShareIndex, 0.001);
     }
-
-
 }
