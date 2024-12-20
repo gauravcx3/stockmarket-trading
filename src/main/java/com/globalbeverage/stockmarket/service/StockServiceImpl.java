@@ -1,10 +1,13 @@
 package com.globalbeverage.stockmarket.service;
 
 import com.globalbeverage.stockmarket.domain.Stock;
-import com.globalbeverage.stockmarket.domain.Trade;
+import com.globalbeverage.stockmarket.exception.InvalidPriceException;
+import com.globalbeverage.stockmarket.exception.StockNotFoundException;
 import com.globalbeverage.stockmarket.repository.StockRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class StockServiceImpl implements StockService {
@@ -14,9 +17,9 @@ public class StockServiceImpl implements StockService {
     @Override
     public double calculateDividendYield(String symbol, double price) {
         Stock stock = stockRepository.findBySymbol(symbol)
-                .orElseThrow(() -> new RuntimeException("Stock not found"));
+                .orElseThrow(() -> new StockNotFoundException(symbol));
 
-        if (price <= 0) throw new IllegalArgumentException("Price must be greater than 0");
+        if (price <= 0) throw new InvalidPriceException();
 
         if ("COMMON".equals(stock.getType())) {
             return stock.getLastDividend() / price;
@@ -28,27 +31,27 @@ public class StockServiceImpl implements StockService {
     @Override
     public double calculatePERatio(String symbol, double price) {
         Stock stock = stockRepository.findBySymbol(symbol)
-                .orElseThrow(() -> new RuntimeException("Stock not found"));
+                .orElseThrow(() -> new StockNotFoundException(symbol));
 
         if (stock.getLastDividend() == 0) return 0;
 
         return price / stock.getLastDividend();
     }
 
+    @Override
     public double calculateVWSP(String symbol) {
         Stock stock = stockRepository.findBySymbol(symbol)
-                .orElseThrow(() -> new RuntimeException("Stock not found"));
+                .orElseThrow(() -> new StockNotFoundException(symbol));
+
+        List<Trade> trades = stock.getTrades();
+        if (trades.isEmpty()) return 0;
 
         double totalValue = 0;
         int totalQuantity = 0;
 
-        for (Trade trade : stock.getTrades()) {
+        for (Trade trade : trades) {
             totalValue += trade.getPrice() * trade.getQuantity();
             totalQuantity += trade.getQuantity();
-        }
-
-        if (totalQuantity == 0) {
-            throw new IllegalArgumentException("No trades found for stock " + symbol);
         }
 
         return totalValue / totalQuantity;

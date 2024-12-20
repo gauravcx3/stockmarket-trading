@@ -8,5 +8,6 @@ import org.springframework.stereotype.Service;
 public interface StockService {
     double calculateDividendYield(String symbol, double price);
     double calculatePERatio(String symbol, double price);
+    double calculateVWSP(String symbol);
 }
 

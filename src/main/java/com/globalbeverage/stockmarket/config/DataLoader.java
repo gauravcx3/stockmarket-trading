@@ -5,6 +5,10 @@ import com.globalbeverage.stockmarket.repository.StockRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+/**
+ * DataLoader is a component responsible for preloading the database with sample stock data.
+ * It is executed at application startup and is primarily used for development and testing purposes.
+ */
 @Component
 public class DataLoader implements CommandLineRunner {
     private final StockRepository stockRepository;
