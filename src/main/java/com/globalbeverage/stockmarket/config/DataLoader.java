@@ -75,7 +75,7 @@ public class DataLoader {
      *
      * @param validStocks A list of valid Stock objects to be saved.
      */
-    private void saveStocksInBatches(List<Stock> validStocks) {
+    public void saveStocksInBatches(List<Stock> validStocks) {
         int count = 0;
         List<Stock> batch = new ArrayList<>();
 

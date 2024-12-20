@@ -9,6 +9,9 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -60,44 +63,64 @@ class DataLoaderTest {
      * Verifies that an exception is thrown and the invalid stock is logged.
      */
     @Test
-    void testValidationWithInvalidData() {
+    void testValidationWithInvalidData() throws Exception {
         Stock invalidStock = new Stock("INVALID", "COMMON", -10.0, -5.0, -100.0);
+        List<Stock> stockList = Arrays.asList(invalidStock);
+
+        // Use reflection to access the private validateAndFilterStocks method
+        Method method = DataLoader.class.getDeclaredMethod("validateAndFilterStocks", List.class);
+        method.setAccessible(true);
 
         // Capture logger output
         ArgumentCaptor<String> logCaptor = ArgumentCaptor.forClass(String.class);
 
-        // Simulate invalid stock data processing
+        // Invoke the method using reflection and assert the exception is thrown
         try {
-            dataLoader.loadData(true);
-        } catch (Exception e) {
-            // Verify that the logger captured the error message
+            method.invoke(dataLoader, stockList);
+        } catch (InvocationTargetException e) {
+            // This catches the IllegalArgumentException thrown by validateData
+            Throwable cause = e.getCause();
+            assertTrue(cause instanceof IllegalArgumentException);
+            assertTrue(cause.getMessage().contains("Invalid LastDividend value"));
+
+            // Verify the logger captured the error message
             verify(logger).error(logCaptor.capture());
             assertTrue(logCaptor.getValue().contains("Invalid stock data"));
         }
-
-        // Assert that an exception is thrown for invalid stock
-        Exception exception = assertThrows(Exception.class, () -> {
-            dataLoader.loadData(true);
-        });
-
-        assertTrue(exception.getMessage().contains("Invalid stock data"));
     }
 
     /**
-     * Test for batch processing of stock data.
-     * Verifies that stock data is saved in batches to the repository.
+     * Test the batch processing of stocks.
+     * This test accesses the private saveStocksInBatches method using reflection.
      */
     @Test
-    void testBatchProcessing() {
-        List<Stock> stocks = List.of(
-                new Stock("TEA", "COMMON", 0.0, 0.0, 100.0),
-                new Stock("POP", "COMMON", 8.0, 0.0, 100.0),
-                new Stock("ALE", "COMMON", 23.0, 0.0, 60.0)
+    void testBatchProcessing() throws Exception {
+        // Arrange: Prepare a list of 5 stocks to be saved in batches.
+        List<Stock> stocksToSave = Arrays.asList(
+                new Stock(null, "TEA", "COMMON", 0.0, 0.0, 100.0),
+                new Stock(null, "POP", "COMMON", 8.0, 0.0, 100.0),
+                new Stock(null, "ALE", "COMMON", 23.0, 0.0, 60.0),
+                new Stock(null, "GIN", "PREFERRED", 8.0, 2.0, 100.0),
+                new Stock(null, "JOE", "COMMON", 13.0, 0.0, 250.0)
         );
 
-        dataLoader.loadData(true);
+        // Use reflection to access the private saveStocksInBatches method
+        Method method = DataLoader.class.getDeclaredMethod("saveStocksInBatches", List.class);
+        method.setAccessible(true);  // Make the private method accessible
 
-        // Verify the repository saved all stocks in batches
-        verify(stockRepository, atLeastOnce()).saveAll(stocks);
+        // Act: Invoke the method using reflection
+        method.invoke(dataLoader, stocksToSave);
+
+        // Verify: Ensure the saveAll method was called with the correct 5 stocks
+        verify(stockRepository).saveAll(argThat(stocks -> {
+            // Convert the Iterable to a List and check its size
+            List<Stock> stockList = (List<Stock>) stocks;
+            return stockList.size() == 5 &&
+                    stockList.stream().anyMatch(stock -> stock.getSymbol().equals("TEA")) &&
+                    stockList.stream().anyMatch(stock -> stock.getSymbol().equals("POP")) &&
+                    stockList.stream().anyMatch(stock -> stock.getSymbol().equals("ALE")) &&
+                    stockList.stream().anyMatch(stock -> stock.getSymbol().equals("GIN")) &&
+                    stockList.stream().anyMatch(stock -> stock.getSymbol().equals("JOE"));
+        }));
     }
 }

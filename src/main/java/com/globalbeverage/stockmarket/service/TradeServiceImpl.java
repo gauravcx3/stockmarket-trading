@@ -54,13 +54,15 @@ public class TradeServiceImpl implements TradeService {
      * @throws StockNotFoundException if no trades exist for the given stock symbol.
      */
     @Override
-    public List<Trade> getTradesForStock(String stockSymbol) throws StockNotFoundException {
+    public List<Trade> getTradesForStock(String stockSymbol) {
         List<Trade> trades = tradeRepository.findByStockSymbol(stockSymbol);
-        if (trades.isEmpty()) {
-            logger.error("No trades found for stock: {}", stockSymbol);
-            throw new StockNotFoundException("No trades found for stock: " + stockSymbol);
+
+        // If the repository returns null, throw an exception
+        if (trades == null) {
+            throw new IllegalStateException("No trades found for stock symbol: " + stockSymbol);
         }
-        logger.info("Retrieved {} trades for stock: {}", trades.size(), stockSymbol);
+
+        // If the repository returns an empty list, return the empty list (no exception)
         return trades;
     }
 

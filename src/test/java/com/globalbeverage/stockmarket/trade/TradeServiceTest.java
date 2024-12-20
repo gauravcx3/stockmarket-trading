@@ -1,6 +1,7 @@
 package com.globalbeverage.stockmarket.trade;
 
 import com.globalbeverage.stockmarket.domain.Trade;
+import com.globalbeverage.stockmarket.domain.Stock; // Assuming Stock class exists
 import com.globalbeverage.stockmarket.repository.TradeRepository;
 import com.globalbeverage.stockmarket.service.TradeServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,8 +35,11 @@ public class TradeServiceTest {
      */
     @Test
     void shouldRecordTradeSuccessfully() {
-        // Arrange: Prepare a trade object and mock the repository's save method.
-        Trade trade = new Trade("Coca Cola", null, 10, true, 50);
+        // Arrange: Prepare a trade object with a valid timestamp and mock the repository's save method.
+        LocalDateTime timestamp = LocalDateTime.now(); // Use current date and time for timestamp
+        Stock stock = new Stock("Coca Cola", "COMMON", 100, 0, 100); // Create or mock a Stock object
+        Trade trade = new Trade("Coca Cola", timestamp, 10, true, 50, stock); // Provide the stock object and timestamp
+
         when(tradeRepository.save(trade)).thenReturn(trade);
 
         // Act: Call the recordTrade method of the service.
@@ -51,7 +56,9 @@ public class TradeServiceTest {
     @Test
     void shouldThrowExceptionWhenInvalidTradePrice() {
         // Arrange: Prepare a trade object with an invalid price (<= 0).
-        Trade trade = new Trade("Coca Cola", null, 10, true, -50);
+        LocalDateTime timestamp = LocalDateTime.now();
+        Stock stock = new Stock("Coca Cola", "COMMON", 100, 0, 100);
+        Trade trade = new Trade("Coca Cola", timestamp, 10, true, -50, stock);
 
         // Act & Assert: Verify that an IllegalArgumentException is thrown.
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
@@ -69,8 +76,10 @@ public class TradeServiceTest {
     @Test
     void shouldReturnListOfTradesForStock() {
         // Arrange: Prepare a list of trades for a stock and mock the repository method.
-        Trade trade1 = new Trade("Coca Cola", null, 10, true, 50);
-        Trade trade2 = new Trade("Coca Cola", null, 20, false, 60);
+        LocalDateTime timestamp = LocalDateTime.now();
+        Stock stock = new Stock("Coca Cola", "COMMON", 100, 0, 100);
+        Trade trade1 = new Trade("Coca Cola", timestamp, 10, true, 50, stock);
+        Trade trade2 = new Trade("Coca Cola", timestamp, 20, false, 60, stock);
         List<Trade> trades = List.of(trade1, trade2);
         when(tradeRepository.findByStockSymbol("Coca Cola")).thenReturn(trades);
 
@@ -106,7 +115,9 @@ public class TradeServiceTest {
     @Test
     void shouldThrowExceptionWhenInvalidTradeQuantity() {
         // Arrange: Prepare a trade object with an invalid quantity (<= 0).
-        Trade trade = new Trade("Coca Cola", null, 0, true, 50);
+        LocalDateTime timestamp = LocalDateTime.now();
+        Stock stock = new Stock("Coca Cola", "COMMON", 100, 0, 100);
+        Trade trade = new Trade("Coca Cola", timestamp, 0, true, 50, stock);
 
         // Act & Assert: Verify that an IllegalArgumentException is thrown.
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
@@ -123,7 +134,9 @@ public class TradeServiceTest {
     @Test
     void shouldCallFindByStockSymbol() {
         // Arrange: Prepare a trade and mock the repository's findByStockSymbol method.
-        Trade trade = new Trade("Coca Cola", null, 10, true, 50);
+        LocalDateTime timestamp = LocalDateTime.now();
+        Stock stock = new Stock("Coca Cola", "COMMON", 100, 0, 100);
+        Trade trade = new Trade("Coca Cola", timestamp, 10, true, 50, stock);
         when(tradeRepository.findByStockSymbol("Coca Cola")).thenReturn(List.of(trade));
 
         // Act: Call the getTradesForStock method.
@@ -131,5 +144,22 @@ public class TradeServiceTest {
 
         // Assert: Verify that the repository's findByStockSymbol method was called.
         verify(tradeRepository, times(1)).findByStockSymbol("Coca Cola");
+    }
+
+    /**
+     * Test that an exception is thrown when the repository returns null for the stock symbol.
+     */
+    @Test
+    void shouldThrowExceptionWhenStockSymbolNotFound() {
+        // Arrange: Mock the repository to return null for a non-existent stock.
+        when(tradeRepository.findByStockSymbol("NonExistentStock")).thenReturn(null);
+
+        // Act & Assert: Verify that an IllegalStateException is thrown.
+        Exception exception = assertThrows(IllegalStateException.class, () -> {
+            tradeService.getTradesForStock("NonExistentStock");
+        });
+
+        // Assert: Verify the exception message.
+        assertEquals("No trades found for stock symbol: NonExistentStock", exception.getMessage());
     }
 }

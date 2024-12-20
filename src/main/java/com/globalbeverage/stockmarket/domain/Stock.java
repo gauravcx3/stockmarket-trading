@@ -1,9 +1,6 @@
 package com.globalbeverage.stockmarket.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +41,7 @@ public class Stock {
     @Min(value = 0, message = "Par value must be non-negative") // Ensures parValue is non-negative
     private double parValue;        // Par value (e.g., 100.0)
 
+    @OneToMany(mappedBy = "stock", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<Trade> trades = new ArrayList<>(); // List of trades associated with the stock
 
     /**

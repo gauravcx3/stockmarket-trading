@@ -18,8 +18,8 @@ public class StockNotFoundException extends RuntimeException {
      * @param message The detail message that describes the reason for the exception.
      */
     public StockNotFoundException(String message) {
-        super(message);
-        logger.error("Stock not found: " + message);  // Log the error message when the exception is thrown
+        super("Stock not found: " + message);  // Prefix the message here
+        logger.error("Stock not found: " + message);  // Log the full message when the exception is thrown
     }
 
     /**
@@ -29,15 +29,15 @@ public class StockNotFoundException extends RuntimeException {
      * @param cause   The cause of the exception (can be used for chaining exceptions).
      */
     public StockNotFoundException(String message, Throwable cause) {
-        super(message, cause);
-        logger.error("Stock not found: " + message, cause);  // Log the error with the cause when provided
+        super("Stock not found: " + message, cause);  // Prefix the message here
+        logger.error("Stock not found: " + message, cause);  // Log the full message with the cause
     }
 
     /**
      * Constructor to create a new StockNotFoundException with a default message.
      */
     public StockNotFoundException() {
-        super("The specified stock was not found.");
+        super("Stock not found: The specified stock was not found.");  // Prefix the default message
         logger.error("Stock not found: The specified stock was not found.");  // Log the default error
     }
 }
