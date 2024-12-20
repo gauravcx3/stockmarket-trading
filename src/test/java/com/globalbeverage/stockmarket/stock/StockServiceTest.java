@@ -1,6 +1,7 @@
 package com.globalbeverage.stockmarket.stock;
 
 import com.globalbeverage.stockmarket.domain.Stock;
+import com.globalbeverage.stockmarket.domain.Trade;
 import com.globalbeverage.stockmarket.exception.StockNotFoundException;
 import com.globalbeverage.stockmarket.service.StockServiceImpl;
 import com.globalbeverage.stockmarket.repository.StockRepository;
@@ -13,6 +14,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -125,4 +128,32 @@ public class StockServiceTest {
         // Ensure the logger was called correctly
         verify(stockRepository, times(1)).findBySymbol(anyString());
     }
+
+    /**
+     * Test the calculation of VWSP (Volume-Weighted Stock Price).
+     * Verifies that VWSP is correctly calculated.
+     */
+    @Test
+    void shouldCalculateVWSP() {
+        // Arrange: Mock the Stock object (only mock necessary methods)
+        Stock stock = mock(Stock.class);
+
+        // Create Trade objects with required fields
+        Trade trade1 = new Trade("Pepsi", LocalDateTime.now().minusMinutes(3), 10, true, 100, stock);
+        Trade trade2 = new Trade("Pepsi", LocalDateTime.now().minusMinutes(2), 5, false, 110, stock);
+        Trade trade3 = new Trade("Pepsi", LocalDateTime.now().minusMinutes(1), 15, true, 120, stock);
+
+        // Mock repository return value
+        when(stockRepository.findBySymbol("Pepsi")).thenReturn(Optional.of(stock));
+
+        // Mock the getTrades() method of the Stock object
+        when(stock.getTrades()).thenReturn(List.of(trade1, trade2, trade3));
+
+        // Act: Call the method to calculate VWSP
+        double vwsp = stockService.calculateVWSP("Pepsi");
+
+        // Assert: Verify the calculated VWSP is correct
+        assertEquals(111.66666666666667, vwsp, 0.001); // Correct expected value based on the calculation
+    }
+
 }

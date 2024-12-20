@@ -10,7 +10,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of the StockService interface.
@@ -81,7 +84,7 @@ public class StockServiceImpl implements StockService {
     }
 
     /**
-     * Calculates the volume-weighted average price (VWAP) for a given stock based on its trades.
+     * Calculates the volume-weighted average price (VWAP) for a given stock based on its trades in the last 5 minutes.
      *
      * @param symbol The symbol of the stock (e.g., TEA, POP).
      * @return The VWAP as a double.
@@ -96,7 +99,14 @@ public class StockServiceImpl implements StockService {
                 });
 
         List<Trade> trades = stock.getTrades();
-        if (trades.isEmpty()) return 0;
+
+        // Filter trades to only include those in the last 5 minutes
+        LocalDateTime fiveMinutesAgo = LocalDateTime.now().minus(5, ChronoUnit.MINUTES);
+        trades = trades.stream()
+                .filter(trade -> trade.getTimestamp().isAfter(fiveMinutesAgo))
+                .collect(Collectors.toList());
+
+        if (trades.isEmpty()) return 0;  // Return 0 if there are no trades in the last 5 minutes
 
         double totalValue = 0;
         int totalQuantity = 0;
