@@ -25,7 +25,7 @@ This project is part of a StockMarket App Assignment for 2024. The goal of the p
 
 1. **Clone the repository**:
     ```bash
-    git clone https://github.com/yourusername/stockmarket-trading.git
+    git clone https://github.com/gauravcx3/stockmarket-trading.git
     cd stockmarket-trading
     ```
 
