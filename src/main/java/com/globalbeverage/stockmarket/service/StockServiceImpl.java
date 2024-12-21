@@ -9,15 +9,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Implementation of the StockService interface.
- * Provides methods for calculating dividend yield, P/E ratio, and volume-weighted average price (VWAP) for stocks.
+ * Implementation of the StockService interface for calculating stock-related financial metrics.
  */
 @Service
 public class StockServiceImpl implements StockService {
@@ -28,13 +26,13 @@ public class StockServiceImpl implements StockService {
     private StockRepository stockRepository;
 
     /**
-     * Calculates the dividend yield for a given stock.
+     * Calculates the dividend yield for a stock.
      *
-     * @param symbol The symbol of the stock (e.g., TEA, POP).
-     * @param price The current market price of the stock.
-     * @return The dividend yield as a double.
-     * @throws StockNotFoundException If the stock is not found in the repository.
-     * @throws InvalidPriceException If the price is less than or equal to 0.
+     * @param symbol The stock's symbol.
+     * @param price The stock's current market price.
+     * @return The dividend yield.
+     * @throws StockNotFoundException if the stock is not found.
+     * @throws InvalidPriceException if the price is invalid (<= 0).
      */
     @Override
     public double calculateDividendYield(String symbol, double price) {
@@ -45,25 +43,25 @@ public class StockServiceImpl implements StockService {
                 });
 
         if (price <= 0) {
-            logger.error("Invalid price {} provided for stock with symbol {}.", price, symbol);
+            logger.error("Invalid price {} for stock {}.", price, symbol);
             throw new InvalidPriceException();
         }
 
         if ("COMMON".equals(stock.getType())) {
             return stock.getLastDividend() / price;
-        } else { // PREFERRED
+        } else {
             return (stock.getFixedDividend() * stock.getParValue()) / price;
         }
     }
 
     /**
-     * Calculates the P/E ratio for a given stock.
+     * Calculates the P/E ratio for a stock.
      *
-     * @param symbol The symbol of the stock (e.g., TEA, POP).
-     * @param price The current market price of the stock.
-     * @return The P/E ratio as a double.
-     * @throws StockNotFoundException If the stock is not found in the repository.
-     * @throws InvalidPriceException If the price is less than or equal to 0.
+     * @param symbol The stock's symbol.
+     * @param price The stock's current market price.
+     * @return The P/E ratio.
+     * @throws StockNotFoundException if the stock is not found.
+     * @throws InvalidPriceException if the price is invalid (<= 0).
      */
     @Override
     public double calculatePERatio(String symbol, double price) {
@@ -74,26 +72,24 @@ public class StockServiceImpl implements StockService {
                 });
 
         if (price <= 0) {
-            logger.error("Invalid price {} provided for stock with symbol {}.", price, symbol);
+            logger.error("Invalid price {} for stock {}.", price, symbol);
             throw new InvalidPriceException();
         }
 
-        // If no dividend, return NaN
         if (stock.getLastDividend() == 0) {
-            logger.warn("No dividend for stock with symbol {}. Returning NaN for P/E ratio.", symbol);
+            logger.warn("No dividend for stock {}. Returning NaN for P/E ratio.", symbol);
             return Double.NaN;
         }
 
         return price / stock.getLastDividend();
     }
 
-
     /**
-     * Calculates the volume-weighted average price (VWAP) for a given stock based on its trades in the last 5 minutes.
+     * Calculates the VWAP (Volume-Weighted Average Price) for a stock based on trades in the last 5 minutes.
      *
-     * @param symbol The symbol of the stock (e.g., TEA, POP).
-     * @return The VWAP as a double.
-     * @throws StockNotFoundException If the stock is not found in the repository.
+     * @param symbol The stock's symbol.
+     * @return The VWAP.
+     * @throws StockNotFoundException if the stock is not found.
      */
     @Override
     public double calculateVWSP(String symbol) {
@@ -104,14 +100,12 @@ public class StockServiceImpl implements StockService {
                 });
 
         List<Trade> trades = stock.getTrades();
-
-        // Filter trades to only include those in the last 5 minutes
         LocalDateTime fiveMinutesAgo = LocalDateTime.now().minus(5, ChronoUnit.MINUTES);
         trades = trades.stream()
                 .filter(trade -> trade.getTimestamp().isAfter(fiveMinutesAgo))
                 .collect(Collectors.toList());
 
-        if (trades.isEmpty()) return 0;  // Return 0 if there are no trades in the last 5 minutes
+        if (trades.isEmpty()) return 0;
 
         double totalValue = 0;
         int totalQuantity = 0;
@@ -125,28 +119,22 @@ public class StockServiceImpl implements StockService {
     }
 
     /**
-     * Calculates the GBCE All Share Index using the geometric mean of the volume-weighted average prices (VWSP) of all stocks.
+     * Calculates the GBCE All Share Index based on the geometric mean of VWAPs of all stocks.
      *
-     * @return The GBCE All Share Index as a double.
+     * @return The GBCE All Share Index.
      */
     @Override
     public double calculateGBCEAllShareIndex() {
-        List<Stock> stocks = stockRepository.findAll();  // Ensure you fetch all stocks
+        List<Stock> stocks = stockRepository.findAll();
         double productOfVWSP = 1.0;
         int count = 0;
 
-        // Loop through all stocks to get their VWSP and multiply
         for (Stock stock : stocks) {
-            double vwsp = calculateVWSP(stock.getSymbol());  // Calculate VWSP for each stock
+            double vwsp = calculateVWSP(stock.getSymbol());
             productOfVWSP *= vwsp;
             count++;
         }
 
-        // Calculate the geometric mean
-        if (count > 0) {
-            return Math.pow(productOfVWSP, 1.0 / count);  // Geometric mean formula
-        } else {
-            return 0.0;  // If no stocks exist
-        }
+        return (count > 0) ? Math.pow(productOfVWSP, 1.0 / count) : 0.0;
     }
 }

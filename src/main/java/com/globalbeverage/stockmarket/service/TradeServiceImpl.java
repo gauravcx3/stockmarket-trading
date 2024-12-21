@@ -3,17 +3,23 @@ package com.globalbeverage.stockmarket.service;
 import com.globalbeverage.stockmarket.domain.Trade;
 import com.globalbeverage.stockmarket.exception.StockNotFoundException;
 import com.globalbeverage.stockmarket.repository.TradeRepository;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- * Implementation of the TradeService interface.
- * Provides methods to record trades and retrieve trades for a specific stock.
+ * Implementation of TradeService, handling trade recording and retrieval.
  */
 @Service
 public class TradeServiceImpl implements TradeService {
@@ -23,54 +29,59 @@ public class TradeServiceImpl implements TradeService {
     @Autowired
     private TradeRepository tradeRepository;
 
+    private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+
     /**
-     * Records a new trade.
-     * Validates the trade data and throws an exception if the price or quantity is invalid.
+     * Records a new trade after validating the price and quantity.
      *
-     * @param trade The trade object to be recorded.
-     * @throws IllegalArgumentException if the trade price or quantity is invalid.
+     * @param trade The trade to be recorded.
+     * @throws ConstraintViolationException if validation fails.
      */
     @Override
     public void recordTrade(Trade trade) {
-        if (trade.getPrice() <= 0) {
-            logger.error("Invalid trade price: {} for stock: {}", trade.getPrice(), trade.getStockSymbol());
-            throw new IllegalArgumentException("Trade price must be greater than 0");
+        // Validate the trade entity
+        Set<ConstraintViolation<Trade>> violations = validator.validate(trade);
+        if (!violations.isEmpty()) {
+            // Log the violations in more detail
+            String violationMessages = violations.stream()
+                    .map(violation -> violation.getMessage())
+                    .collect(Collectors.joining(", "));
+
+            logger.error("Invalid trade: {} - Violations found: {}", trade, violationMessages);
+            throw new ConstraintViolationException("Trade validation failed", violations);
         }
-        if (trade.getQuantity() <= 0) {
-            logger.error("Invalid trade quantity: {} for stock: {}", trade.getQuantity(), trade.getStockSymbol());
-            throw new IllegalArgumentException("Trade quantity must be greater than 0");
+
+        // Additional logic (e.g., checking price for buy trades)
+        if (trade.isBuy() && trade.getPrice() <= 0) {
+            throw new IllegalArgumentException("Price must be greater than 0 for buy trades");
         }
+
         tradeRepository.save(trade);
-        logger.info("Successfully recorded trade for stock: {} with price: {} and quantity: {}",
-                trade.getStockSymbol(), trade.getPrice(), trade.getQuantity());
+        logger.info("Trade recorded: {} - Price: {} Quantity: {}", trade.getStockSymbol(), trade.getPrice(), trade.getQuantity());
     }
 
     /**
-     * Retrieves a list of trades for a specific stock.
-     * Throws a StockNotFoundException if no trades are found for the given stock.
+     * Retrieves trades for a specific stock.
+     * Throws an exception if no trades are found.
      *
-     * @param stockSymbol The symbol of the stock for which trades are to be retrieved.
-     * @return A list of trades associated with the given stock symbol.
-     * @throws StockNotFoundException if no trades exist for the given stock symbol.
+     * @param stockSymbol The stock symbol.
+     * @return List of trades.
+     * @throws StockNotFoundException if no trades exist for the stock.
      */
     @Override
     public List<Trade> getTradesForStock(String stockSymbol) {
         List<Trade> trades = tradeRepository.findByStockSymbol(stockSymbol);
-
-        // If the repository returns null, throw an exception
-        if (trades == null) {
-            throw new IllegalStateException("No trades found for stock symbol: " + stockSymbol);
+        if (trades == null || trades.isEmpty()) {
+            return new ArrayList<>();  // Return an empty list instead of throwing an exception
         }
-
-        // If the repository returns an empty list, return the empty list (no exception)
         return trades;
     }
 
     /**
-     * Retrieves a list of trades for a specific stock, or returns an empty list if no trades exist.
+     * Retrieves trades for a specific stock, returning an empty list if none exist.
      *
-     * @param stockSymbol The symbol of the stock for which trades are to be retrieved.
-     * @return A list of trades associated with the given stock symbol, or an empty list if no trades exist.
+     * @param stockSymbol The stock symbol.
+     * @return List of trades or an empty list if none found.
      */
     @Override
     public Optional<List<Trade>> getTradesForStockOptional(String stockSymbol) {

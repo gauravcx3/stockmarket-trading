@@ -17,7 +17,7 @@ public class InvalidPriceException extends RuntimeException {
      */
     public InvalidPriceException(String message) {
         super(message);
-        logger.error("Invalid price error: " + message);  // Log the error with the message
+        logger.error("Invalid price error: " + message);
     }
 
     /**
@@ -25,6 +25,6 @@ public class InvalidPriceException extends RuntimeException {
      */
     public InvalidPriceException() {
         super("The price provided is invalid. It must be greater than zero.");
-        logger.error("Invalid price error: The price provided is invalid. It must be greater than zero.");  // Log the default error
+        logger.error("Invalid price error: The price provided is invalid. It must be greater than zero.");
     }
 }

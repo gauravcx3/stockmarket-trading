@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
@@ -21,38 +20,38 @@ import java.util.List;
 @Data
 public class Stock {
 
-    private static final Logger logger = LoggerFactory.getLogger(Stock.class); // Logger for Stock class
+    private static final Logger logger = LoggerFactory.getLogger(Stock.class);
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // Unique identifier for the stock
+    private Long id;
 
-    @NotNull(message = "Symbol cannot be null") // Ensures the symbol is provided
-    private String symbol;          // Stock symbol (e.g., TEA, POP)
+    @NotNull(message = "Symbol cannot be null")
+    private String symbol;
 
-    @NotNull(message = "Stock type cannot be null") // Ensures the stock type is provided
-    @Enumerated(EnumType.STRING)  // Ensures the enum is stored as a string in the database
-    private StockType type;            // Type of the stock (COMMON or PREFERRED)
+    @NotNull(message = "Stock type cannot be null")
+    @Enumerated(EnumType.STRING)
+    private StockType type;
 
-    @Min(value = 0, message = "Last dividend must be non-negative") // Ensures lastDividend is non-negative
-    private double lastDividend;    // Last dividend in pennies (for COMMON)
+    @Min(value = 0, message = "Last dividend must be non-negative")
+    private double lastDividend;
 
-    private double fixedDividend;   // Fixed dividend (only applicable for PREFERRED)
+    private double fixedDividend;
 
-    @Min(value = 0, message = "Par value must be non-negative") // Ensures parValue is non-negative
-    private double parValue;        // Par value (e.g., 100.0)
+    @Min(value = 0, message = "Par value must be non-negative")
+    private double parValue;
 
     @OneToMany(mappedBy = "stock", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<Trade> trades = new ArrayList<>(); // List of trades associated with the stock
+    private final List<Trade> trades = new ArrayList<>();
 
     /**
      * Constructs a Stock object with the given parameters.
      *
-     * @param symbol          The stock symbol (e.g., TEA, POP).
-     * @param type            The type of stock (COMMON or PREFERRED).
-     * @param lastDividend    The last dividend in pennies.
-     * @param fixedDividend   The fixed dividend for PREFERRED stock.
-     * @param parValue        The par value of the stock.
+     * @param symbol        The stock symbol (e.g., TEA, POP).
+     * @param type          The type of stock (COMMON or PREFERRED).
+     * @param lastDividend  The last dividend in pennies.
+     * @param fixedDividend The fixed dividend for PREFERRED stock.
+     * @param parValue      The par value of the stock.
      */
     public Stock(String symbol, StockType type, double lastDividend, double fixedDividend, double parValue) {
         this.symbol = symbol;
@@ -69,7 +68,7 @@ public class Stock {
      */
     public void addTrade(Trade trade) {
         this.trades.add(trade);
-        logger.info("Added trade: " + trade + " to stock: " + symbol); // Log when a trade is added
+        logger.info("Added trade: " + trade + " to stock: " + symbol);
     }
 
     /**

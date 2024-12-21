@@ -2,13 +2,11 @@ package com.globalbeverage.stockmarket.service;
 
 import com.globalbeverage.stockmarket.domain.Trade;
 import com.globalbeverage.stockmarket.exception.StockNotFoundException;
-
 import java.util.List;
 import java.util.Optional;
 
 /**
  * Service interface for managing trade operations.
- * Provides methods for recording trades and retrieving trades for a specific stock.
  */
 public interface TradeService {
 
@@ -23,17 +21,17 @@ public interface TradeService {
     /**
      * Retrieves a list of trades for a specific stock.
      *
-     * @param stockSymbol The symbol of the stock for which trades are to be retrieved.
-     * @return A list of trades associated with the given stock symbol, or an empty list if no trades are found.
+     * @param stockSymbol The stock's symbol.
+     * @return A list of trades for the stock, or an empty list if none found.
      */
     List<Trade> getTradesForStock(String stockSymbol);
 
     /**
-     * Retrieves a list of trades for a specific stock, or throws an exception if no trades exist.
+     * Retrieves a list of trades for a stock, throwing an exception if no trades are found.
      *
-     * @param stockSymbol The symbol of the stock for which trades are to be retrieved.
-     * @return A list of trades associated with the given stock symbol.
-     * @throws StockNotFoundException if no trades exist for the given stock symbol.
+     * @param stockSymbol The stock's symbol.
+     * @return A list of trades for the stock.
+     * @throws StockNotFoundException if no trades are found.
      */
     Optional<List<Trade>> getTradesForStockOptional(String stockSymbol) throws StockNotFoundException;
 }

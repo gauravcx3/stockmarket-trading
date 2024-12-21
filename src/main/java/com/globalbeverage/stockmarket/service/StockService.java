@@ -4,50 +4,49 @@ import com.globalbeverage.stockmarket.exception.InvalidPriceException;
 import com.globalbeverage.stockmarket.exception.StockNotFoundException;
 
 /**
- * Service interface for calculating financial metrics related to stocks.
- * Provides methods for calculating dividend yield, P/E ratio, volume-weighted average price (VWAP),
- * and the GBCE All Share Index.
+ * Service interface for calculating financial metrics for stocks.
+ * Includes methods for calculating:
+ * - Dividend Yield
+ * - P/E Ratio
+ * - VWAP
+ * - GBCE All Share Index
  */
 public interface StockService {
 
     /**
-     * Calculates the dividend yield for a stock based on its symbol and the current market price.
-     * The dividend yield is calculated as the annual dividend divided by the stock price.
+     * Calculates the dividend yield for a stock.
      *
-     * @param symbol The symbol of the stock (e.g., TEA, POP).
-     * @param price The current market price of the stock.
-     * @return The dividend yield as a double.
-     * @throws StockNotFoundException if the stock is not found in the repository.
-     * @throws InvalidPriceException if the price is less than or equal to zero.
+     * @param symbol The stock's symbol.
+     * @param price The stock's current market price.
+     * @return The dividend yield.
+     * @throws StockNotFoundException if the stock is not found.
+     * @throws InvalidPriceException if the price is invalid (<= 0).
      */
     double calculateDividendYield(String symbol, double price) throws StockNotFoundException, InvalidPriceException;
 
     /**
-     * Calculates the Price-to-Earnings (P/E) ratio for a stock based on its symbol and the current market price.
-     * The P/E ratio is calculated as the stock price divided by the earnings per share (EPS).
+     * Calculates the Price-to-Earnings (P/E) ratio for a stock.
      *
-     * @param symbol The symbol of the stock (e.g., TEA, POP).
-     * @param price The current market price of the stock.
-     * @return The P/E ratio as a double.
-     * @throws StockNotFoundException if the stock is not found in the repository.
+     * @param symbol The stock's symbol.
+     * @param price The stock's current market price.
+     * @return The P/E ratio.
+     * @throws StockNotFoundException if the stock is not found.
      */
     double calculatePERatio(String symbol, double price) throws StockNotFoundException;
 
     /**
-     * Calculates the volume-weighted average price (VWAP) for a stock based on its symbol.
-     * VWAP is used to determine the average price a stock has traded at throughout the day, based on both price and volume.
+     * Calculates the Volume-Weighted Average Price (VWAP) for a stock.
      *
-     * @param symbol The symbol of the stock (e.g., TEA, POP).
-     * @return The VWAP as a double.
-     * @throws StockNotFoundException if the stock is not found in the repository.
+     * @param symbol The stock's symbol.
+     * @return The VWAP.
+     * @throws StockNotFoundException if the stock is not found.
      */
     double calculateVWSP(String symbol) throws StockNotFoundException;
 
     /**
-     * Calculates the GBCE All Share Index using the geometric mean of the volume-weighted average prices (VWSP) of all stocks.
-     * The GBCE All Share Index is a measure of the overall market performance.
+     * Calculates the GBCE All Share Index.
      *
-     * @return The GBCE All Share Index as a double.
+     * @return The GBCE All Share Index.
      */
     double calculateGBCEAllShareIndex();
 }

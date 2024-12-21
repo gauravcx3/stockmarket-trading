@@ -6,7 +6,6 @@ import com.globalbeverage.stockmarket.repository.StockRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -19,7 +18,7 @@ import java.util.Random;
 public class DataLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(DataLoader.class);
-    private static final int BATCH_SIZE = 100; // Define batch size for processing data
+    private static final int BATCH_SIZE = 100;
 
     private final StockRepository stockRepository;
 
@@ -31,7 +30,6 @@ public class DataLoader {
      * Loads and processes stock data.
      *
      * @param usePresetData A boolean flag to determine whether to use pre-set data or randomly generated data.
-     *                      If true, pre-set data is used; otherwise, random data is generated and used.
      */
     public void loadData(boolean usePresetData) {
         List<Stock> stockList = usePresetData ? getPresetData() : generateRandomData();
@@ -39,7 +37,6 @@ public class DataLoader {
         logger.info("Loading data using " + (usePresetData ? "preset data" : "randomly generated data") +
                 ". Total stocks to process: " + stockList.size());
 
-        // Split the validation and saving logic
         List<Stock> validStocks = validateAndFilterStocks(stockList);
         saveStocksInBatches(validStocks);
     }
@@ -59,12 +56,11 @@ public class DataLoader {
                 validateData(stock);
                 validStocks.add(stock);
             } catch (Exception e) {
-                logger.error("Invalid stock data: " + stock, e); // Include stock data for debugging
-                invalidStocks.add(stock); // Add invalid stock for logging purposes
+                logger.error("Invalid stock data: " + stock, e);
+                invalidStocks.add(stock);
             }
         }
 
-        // Log any invalid stocks after processing
         if (!invalidStocks.isEmpty()) {
             logger.warn("There were invalid stocks that were not processed: " + invalidStocks);
         }
@@ -85,11 +81,10 @@ public class DataLoader {
             if (++count % BATCH_SIZE == 0) {
                 logger.info("Saving batch of " + batch.size() + " stocks to the repository.");
                 stockRepository.saveAll(batch);
-                batch.clear();  // Clear batch after saving
+                batch.clear();
             }
         }
 
-        // Save any remaining stocks
         if (!batch.isEmpty()) {
             logger.info("Saving final batch of " + batch.size() + " stocks.");
             stockRepository.saveAll(batch);
@@ -139,7 +134,7 @@ public class DataLoader {
      * @throws IllegalArgumentException If the stock data contains invalid values (e.g., negative price, volume, or dividend).
      */
     private void validateData(Stock stock) throws IllegalArgumentException {
-        String stockSymbol = stock.getSymbol();  // Correct method for getting the stock symbol
+        String stockSymbol = stock.getSymbol();
 
         if (stock.getLastDividend() < 0) {
             logger.error("Invalid LastDividend value for stock " + stockSymbol + ": " + stock.getLastDividend());

@@ -2,12 +2,11 @@ package com.globalbeverage.stockmarket.repository;
 
 import com.globalbeverage.stockmarket.domain.Trade;
 import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.List;
 
 /**
- * Repository interface for accessing and managing Trade entities.
- * Extends JpaRepository to provide CRUD operations and custom queries.
+ * Repository interface for accessing and managing {@link Trade} entities.
+ * Extends JpaRepository to provide basic CRUD operations and custom query methods.
  */
 public interface TradeRepository extends JpaRepository<Trade, Long> {
 

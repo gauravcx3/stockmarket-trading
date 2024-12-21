@@ -18,7 +18,7 @@ public class TradeNotFoundException extends RuntimeException {
      */
     public TradeNotFoundException(String message) {
         super(message);
-        logger.error("Trade not found: " + message);  // Log the error message when the exception is thrown
+        logger.error("Trade not found: " + message);
     }
 
     /**
@@ -26,6 +26,6 @@ public class TradeNotFoundException extends RuntimeException {
      */
     public TradeNotFoundException() {
         super("The specified trade was not found.");
-        logger.error("Trade not found: The specified trade was not found.");  // Log the default error
+        logger.error("Trade not found: The specified trade was not found.");
     }
 }

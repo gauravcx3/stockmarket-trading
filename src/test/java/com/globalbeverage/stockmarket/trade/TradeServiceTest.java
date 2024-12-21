@@ -2,9 +2,11 @@ package com.globalbeverage.stockmarket.trade;
 
 import com.globalbeverage.stockmarket.domain.Trade;
 import com.globalbeverage.stockmarket.domain.Stock;
-import com.globalbeverage.stockmarket.domain.StockType; // Assuming the StockType enum exists
+import com.globalbeverage.stockmarket.domain.StockType;
+import com.globalbeverage.stockmarket.exception.StockNotFoundException;
 import com.globalbeverage.stockmarket.repository.TradeRepository;
 import com.globalbeverage.stockmarket.service.TradeServiceImpl;
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -59,15 +61,16 @@ public class TradeServiceTest {
         // Arrange: Prepare a trade object with an invalid price (<= 0).
         LocalDateTime timestamp = LocalDateTime.now();
         Stock stock = new Stock("Coca Cola", StockType.COMMON, 100, 0, 100);
-        Trade trade = new Trade("Coca Cola", timestamp, 10, true, -50, stock);
+        Trade trade = new Trade("Coca Cola", timestamp, 10, true, -50, stock);  // Price = -50
 
-        // Act & Assert: Verify that an IllegalArgumentException is thrown.
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+        // Act: Verify that a ConstraintViolationException is thrown.
+        ConstraintViolationException exception = assertThrows(ConstraintViolationException.class, () -> {
             tradeService.recordTrade(trade);
         });
 
-        // Assert: Verify the exception message.
-        assertEquals("Trade price must be greater than 0", exception.getMessage());
+        // Assert: Verify that the violation contains the correct message for the price.
+        assertTrue(exception.getConstraintViolations().stream()
+                .anyMatch(violation -> violation.getMessage().contains("Price must be non-negative")));
     }
 
     /**
@@ -118,15 +121,16 @@ public class TradeServiceTest {
         // Arrange: Prepare a trade object with an invalid quantity (<= 0).
         LocalDateTime timestamp = LocalDateTime.now();
         Stock stock = new Stock("Coca Cola", StockType.COMMON, 100, 0, 100);
-        Trade trade = new Trade("Coca Cola", timestamp, 0, true, 50, stock);
+        Trade trade = new Trade("Coca Cola", timestamp, 0, true, 50.0, stock);  // Quantity = 0
 
-        // Act & Assert: Verify that an IllegalArgumentException is thrown.
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+        // Act: Verify that a ConstraintViolationException is thrown due to invalid quantity.
+        ConstraintViolationException exception = assertThrows(ConstraintViolationException.class, () -> {
             tradeService.recordTrade(trade);
         });
 
-        // Assert: Verify the exception message.
-        assertEquals("Trade quantity must be greater than 0", exception.getMessage());
+        // Assert: Check that the violations contain the expected message for the quantity field.
+        assertTrue(exception.getConstraintViolations().stream()
+                .anyMatch(violation -> violation.getMessage().equals("Quantity must be greater than 0")));
     }
 
     /**
@@ -148,19 +152,20 @@ public class TradeServiceTest {
     }
 
     /**
-     * Test that an exception is thrown when the repository returns null for the stock symbol.
+     * Test that an empty list is returned when no trades are found for a stock symbol.
      */
     @Test
-    void shouldThrowExceptionWhenStockSymbolNotFound() {
+    void shouldReturnEmptyListWhenStockSymbolNotFound() {
         // Arrange: Mock the repository to return null for a non-existent stock.
         when(tradeRepository.findByStockSymbol("NonExistentStock")).thenReturn(null);
 
-        // Act & Assert: Verify that an IllegalStateException is thrown.
-        Exception exception = assertThrows(IllegalStateException.class, () -> {
-            tradeService.getTradesForStock("NonExistentStock");
-        });
+        // Act: Call the getTradesForStock method.
+        List<Trade> fetchedTrades = tradeService.getTradesForStock("NonExistentStock");
 
-        // Assert: Verify the exception message.
-        assertEquals("No trades found for stock symbol: NonExistentStock", exception.getMessage());
+        // Assert: Verify that the list is empty.
+        assertNotNull(fetchedTrades);
+        assertTrue(fetchedTrades.isEmpty());
     }
+
+
 }

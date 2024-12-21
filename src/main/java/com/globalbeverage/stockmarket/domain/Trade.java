@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-
 import java.time.LocalDateTime;
 
 /**
@@ -19,30 +18,30 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Trade {
 
-    private static final Logger logger = LoggerFactory.getLogger(Trade.class); // Logger for Trade class
+    private static final Logger logger = LoggerFactory.getLogger(Trade.class);
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull(message = "Stock symbol cannot be null") // Ensures the stock symbol is provided
-    private String stockSymbol;     // The symbol of the stock involved in the trade.
+    @NotNull(message = "Stock symbol cannot be null")
+    private String stockSymbol;
 
-    @NotNull(message = "Timestamp cannot be null") // Ensures the timestamp is provided
-    @Column(name = "timestamp") // Maps to a column in the database named "timestamp"
-    private LocalDateTime timestamp; // The date and time the trade was executed.
+    @NotNull(message = "Timestamp cannot be null")
+    @Column(name = "timestamp")
+    private LocalDateTime timestamp;
 
-    @Min(value = 1, message = "Quantity must be greater than 0") // Ensures quantity is a positive integer
-    private int quantity;            // The number of shares traded.
+    @Min(value = 1, message = "Quantity must be greater than 0")
+    private int quantity;
 
-    private boolean buy;             // Indicates whether the trade was a buy (true) or a sell (false).
+    private boolean buy;
 
-    @Min(value = 0, message = "Price must be non-negative") // Ensures price is non-negative
-    private double price;            // The price per share at which the trade was executed.
+    @Min(value = 0, message = "Price must be non-negative")
+    private double price;
 
-    @ManyToOne // Many trades can be associated with one stock
-    @JoinColumn(name = "stock_id")  // Foreign key column for Stock in the Trade table
-    private Stock stock;  // Reference to the associated Stock
+    @ManyToOne
+    @JoinColumn(name = "stock_id")
+    private Stock stock;
 
     /**
      * Constructs a new Trade object.
@@ -56,14 +55,23 @@ public class Trade {
      */
     public Trade(String stockSymbol, LocalDateTime timestamp, int quantity, boolean buy, double price, Stock stock) {
         this.stockSymbol = stockSymbol;
-        this.timestamp = timestamp;
+        this.timestamp = (timestamp != null) ? timestamp : LocalDateTime.now();
         this.quantity = quantity;
         this.buy = buy;
         this.price = price;
-        this.stock = stock;  // Set the stock object for this trade
+        this.stock = stock;
 
-        // Log trade creation
         logger.info("New trade created: stockSymbol={}, quantity={}, price={}, stock={}", stockSymbol, quantity, price, stock.getSymbol());
+    }
+
+    /**
+     * Automatically sets the timestamp to the current time before persisting the entity.
+     */
+    @PrePersist
+    public void setDefaultTimestamp() {
+        if (this.timestamp == null) {
+            this.timestamp = LocalDateTime.now();
+        }
     }
 
     /**
