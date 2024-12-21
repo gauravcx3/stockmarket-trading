@@ -26,42 +26,45 @@ public class StockExceptionTest {
     @InjectMocks
     private StockServiceImpl stockService;
 
+    /**
+     * Verifies that StockNotFoundException is thrown when a stock is not found in the repository.
+     * @throws StockNotFoundException if the stock is not found.
+     */
     @Test
     void shouldThrowStockNotFoundExceptionWhenStockNotFound() {
-        // Arrange: Mock the repository to return an empty Optional for a non-existent stock.
         when(stockRepository.findBySymbol("Coca Cola")).thenReturn(Optional.empty());
 
-        // Act & Assert: Verify that StockNotFoundException is thrown with the correct message.
         StockNotFoundException exception = assertThrows(StockNotFoundException.class, () -> {
             stockService.calculateDividendYield("Coca Cola", 100);
         });
 
-        // Assert the exception message
         assertEquals("Stock not found: Coca Cola", exception.getMessage());
     }
 
+    /**
+     * Verifies that InvalidPriceException is thrown when the price provided is invalid (negative value).
+     * @throws InvalidPriceException if the price is invalid.
+     */
     @Test
     void shouldThrowInvalidPriceExceptionWhenPriceIsInvalid() {
-        // Arrange: Mock the repository to return a valid stock (even though the price will be invalid)
         Stock mockStock = new Stock("Coca Cola", StockType.COMMON, 10.0, 0.0, 100.0);
         when(stockRepository.findBySymbol("Coca Cola")).thenReturn(Optional.of(mockStock));
 
-        // Act & Assert: Verify that InvalidPriceException is thrown when price is invalid (negative in this case)
         InvalidPriceException exception = assertThrows(InvalidPriceException.class, () -> {
             stockService.calculateDividendYield("Coca Cola", -50);
         });
 
-        // Assert the exception message
         assertEquals("The price provided is invalid. It must be greater than zero.", exception.getMessage());
     }
 
+    /**
+     * Verifies that no exception is thrown when a valid price is provided.
+     */
     @Test
     void shouldNotThrowExceptionForValidPrice() {
-        // Arrange: Mock stock data
         Stock mockStock = new Stock("Coca Cola", StockType.COMMON, 10.0, 0.0, 100.0);
         when(stockRepository.findBySymbol("Coca Cola")).thenReturn(Optional.of(mockStock));
 
-        // Act & Assert: Ensure that no exception is thrown when a valid price is provided.
         assertDoesNotThrow(() -> {
             stockService.calculateDividendYield("Coca Cola", 100);
         });

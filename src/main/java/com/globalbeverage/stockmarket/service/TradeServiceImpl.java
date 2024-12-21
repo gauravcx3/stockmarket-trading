@@ -39,10 +39,8 @@ public class TradeServiceImpl implements TradeService {
      */
     @Override
     public void recordTrade(Trade trade) {
-        // Validate the trade entity
         Set<ConstraintViolation<Trade>> violations = validator.validate(trade);
         if (!violations.isEmpty()) {
-            // Log the violations in more detail
             String violationMessages = violations.stream()
                     .map(violation -> violation.getMessage())
                     .collect(Collectors.joining(", "));
@@ -51,7 +49,6 @@ public class TradeServiceImpl implements TradeService {
             throw new ConstraintViolationException("Trade validation failed", violations);
         }
 
-        // Additional logic (e.g., checking price for buy trades)
         if (trade.isBuy() && trade.getPrice() <= 0) {
             throw new IllegalArgumentException("Price must be greater than 0 for buy trades");
         }
@@ -72,7 +69,7 @@ public class TradeServiceImpl implements TradeService {
     public List<Trade> getTradesForStock(String stockSymbol) {
         List<Trade> trades = tradeRepository.findByStockSymbol(stockSymbol);
         if (trades == null || trades.isEmpty()) {
-            return new ArrayList<>();  // Return an empty list instead of throwing an exception
+            return new ArrayList<>();
         }
         return trades;
     }

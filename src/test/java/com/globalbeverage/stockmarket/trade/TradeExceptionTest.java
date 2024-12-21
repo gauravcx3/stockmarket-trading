@@ -21,9 +21,8 @@ import static org.mockito.Mockito.*;
 public class TradeExceptionTest {
 
     @Mock
-    private TradeService tradeService; // Mocked TradeService to simulate service behavior.
+    private TradeService tradeService;
 
-    // Remove the mock for Logger, as it should be invoked directly by the service class.
     private static final Logger logger = LoggerFactory.getLogger(TradeService.class);
 
     /**
@@ -32,25 +31,15 @@ public class TradeExceptionTest {
      */
     @Test
     void shouldThrowExceptionWhenTradeNotFound() {
-        // Arrange: Simulate a scenario where the tradeService throws a TradeNotFoundException.
         when(tradeService.getTradesForStock("Coca Cola")).thenThrow(new TradeNotFoundException("Trade not found: Coca Cola"));
 
-        // Capture log output by using a custom appender (see below for details)
         ArgumentCaptor<String> logCaptor = ArgumentCaptor.forClass(String.class);
 
-        // Act & Assert: Verify that the TradeNotFoundException is thrown and contains the correct message.
         TradeNotFoundException exception = assertThrows(TradeNotFoundException.class, () -> {
-            tradeService.getTradesForStock("Coca Cola"); // Call the method that is expected to throw the exception.
+            tradeService.getTradesForStock("Coca Cola");
         });
 
-        // Assert: Check if the exception message is as expected.
         assertEquals("Trade not found: Coca Cola", exception.getMessage());
-
-        // Ensure the logger was invoked correctly in your service method
         verify(tradeService, times(1)).getTradesForStock("Coca Cola");
-
-        // If you want to capture and verify log messages, you can use a custom Appender or check the log manually
-        // This is where you can add an Appender in your logging framework to capture logs during the test.
-        // Alternatively, this code can be verified in your application logs.
     }
 }
