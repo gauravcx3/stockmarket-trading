@@ -1,8 +1,9 @@
-package com.globalbeverage.stockmarket.service;
+package com.globalbeverage.stockmarket.service.impl;
 
 import com.globalbeverage.stockmarket.domain.Trade;
 import com.globalbeverage.stockmarket.exception.StockNotFoundException;
 import com.globalbeverage.stockmarket.repository.TradeRepository;
+import com.globalbeverage.stockmarket.service.TradeService;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;

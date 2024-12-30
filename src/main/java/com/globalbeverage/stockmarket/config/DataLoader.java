@@ -80,14 +80,14 @@ public class DataLoader {
             batch.add(stock);
             if (++count % BATCH_SIZE == 0) {
                 logger.info("Saving batch of " + batch.size() + " stocks to the repository.");
-                stockRepository.saveAll(batch);
+                stockRepository.saveAllStocks(batch);
                 batch.clear();
             }
         }
 
         if (!batch.isEmpty()) {
             logger.info("Saving final batch of " + batch.size() + " stocks.");
-            stockRepository.saveAll(batch);
+            stockRepository.saveAllStocks(batch);
         }
     }
 

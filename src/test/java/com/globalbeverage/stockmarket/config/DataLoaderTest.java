@@ -42,7 +42,7 @@ class DataLoaderTest {
     @Test
     void testLoadDataWithPresetData() {
         dataLoader.loadData(true);
-        verify(stockRepository, atLeastOnce()).saveAll(anyList());
+        verify(stockRepository, atLeastOnce()).saveAllStocks(anyList());
     }
 
     /**
@@ -52,7 +52,7 @@ class DataLoaderTest {
     @Test
     void testLoadDataWithRandomData() {
         dataLoader.loadData(false);
-        verify(stockRepository, atLeastOnce()).saveAll(anyList());
+        verify(stockRepository, atLeastOnce()).saveAllStocks(anyList());
     }
 
     /**
@@ -100,7 +100,7 @@ class DataLoaderTest {
 
         method.invoke(dataLoader, stocksToSave);
 
-        verify(stockRepository).saveAll(argThat(stocks -> {
+        verify(stockRepository).saveAllStocks(argThat(stocks -> {
             List<Stock> stockList = (List<Stock>) stocks;
             return stockList.size() == 5 &&
                     stockList.stream().anyMatch(stock -> stock.getSymbol().equals("TEA")) &&

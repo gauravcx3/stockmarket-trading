@@ -4,7 +4,7 @@ import com.globalbeverage.stockmarket.domain.Stock;
 import com.globalbeverage.stockmarket.domain.StockType;
 import com.globalbeverage.stockmarket.domain.Trade;
 import com.globalbeverage.stockmarket.exception.StockNotFoundException;
-import com.globalbeverage.stockmarket.service.StockServiceImpl;
+import com.globalbeverage.stockmarket.service.impl.StockServiceImpl;
 import com.globalbeverage.stockmarket.repository.StockRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,7 +42,7 @@ public class StockServiceTest {
     @Test
     void shouldCalculateDividendYieldForCommonStock() {
         Stock stock = new Stock("Preferred Stock", StockType.PREFERRED, 0, 5, 250);
-        when(stockRepository.findBySymbol("Preferred Stock")).thenReturn(Optional.of(stock));
+        when(stockRepository.findStockBySymbol("Preferred Stock")).thenReturn(Optional.of(stock));
         double dividendYield = stockService.calculateDividendYield("Preferred Stock", 123.45);
         double expectedDividendYield = (5 * 250) / 123.45;
         assertEquals(expectedDividendYield, dividendYield, 0.0001, "Dividend yield calculation for preferred stock is incorrect.");
@@ -55,7 +55,7 @@ public class StockServiceTest {
     @Test
     void shouldCalculateDividendYieldForPreferredStock() {
         Stock stock = new Stock("Pepsi", StockType.PREFERRED, 0, 0.05, 100);
-        when(stockRepository.findBySymbol("Pepsi")).thenReturn(Optional.of(stock));
+        when(stockRepository.findStockBySymbol("Pepsi")).thenReturn(Optional.of(stock));
         double dividendYield = stockService.calculateDividendYield("Pepsi", 100);
         assertEquals(0.05, dividendYield, 0.001);
     }
@@ -67,7 +67,7 @@ public class StockServiceTest {
     @Test
     void shouldReturnNaNForPEWhenNoDividend() {
         Stock stock = new Stock("No Dividend Stock", StockType.COMMON, 0, 100, 100);
-        when(stockRepository.findBySymbol("No Dividend Stock")).thenReturn(Optional.of(stock));
+        when(stockRepository.findStockBySymbol("No Dividend Stock")).thenReturn(Optional.of(stock));
         double peRatio = stockService.calculatePERatio("No Dividend Stock", 100);
         assertTrue(Double.isNaN(peRatio), "P/E ratio should be NaN when there's no dividend.");
     }
@@ -80,7 +80,7 @@ public class StockServiceTest {
     @MockitoSettings(strictness = Strictness.LENIENT)
     void shouldHandleNoTradesForVWSP() {
         Stock stock = new Stock("Pepsi", StockType.COMMON, 100, 0, 100);
-        when(stockRepository.findBySymbol("Pepsi")).thenReturn(Optional.of(stock));
+        when(stockRepository.findStockBySymbol("Pepsi")).thenReturn(Optional.of(stock));
         double vwsp = stockService.calculateVWSP("Pepsi");
         assertEquals(0, vwsp, 0.001);
     }
@@ -90,13 +90,13 @@ public class StockServiceTest {
      */
     @Test
     void shouldThrowStockNotFoundExceptionWhenStockNotFound() {
-        when(stockRepository.findBySymbol("NonExistentStock")).thenReturn(Optional.empty());
+        when(stockRepository.findStockBySymbol("NonExistentStock")).thenReturn(Optional.empty());
         ArgumentCaptor<String> logCaptor = ArgumentCaptor.forClass(String.class);
         StockNotFoundException exception = assertThrows(StockNotFoundException.class, () -> {
             stockService.calculateDividendYield("NonExistentStock", 100);
         });
         assertEquals("Stock not found: NonExistentStock", exception.getMessage());
-        verify(stockRepository, times(1)).findBySymbol("NonExistentStock");
+        verify(stockRepository, times(1)).findStockBySymbol("NonExistentStock");
     }
 
     /**
@@ -108,8 +108,8 @@ public class StockServiceTest {
         Stock stock1 = spy(new Stock("Stock1", StockType.COMMON, 0, 0, 100));
         Stock stock2 = spy(new Stock("Stock2", StockType.PREFERRED, 5, 0.05, 100));
 
-        when(stockRepository.findBySymbol("Stock1")).thenReturn(Optional.of(stock1));
-        when(stockRepository.findBySymbol("Stock2")).thenReturn(Optional.of(stock2));
+        when(stockRepository.findStockBySymbol("Stock1")).thenReturn(Optional.of(stock1));
+        when(stockRepository.findStockBySymbol("Stock2")).thenReturn(Optional.of(stock2));
 
         Trade trade1 = new Trade("Stock1", LocalDateTime.now().minusMinutes(3), 10, true, 100, stock1);
         Trade trade2 = new Trade("Stock1", LocalDateTime.now().minusMinutes(1), 20, true, 110, stock1);
@@ -143,9 +143,9 @@ public class StockServiceTest {
         doReturn(List.of(trade1, trade2)).when(stock1).getTrades();
         doReturn(List.of(trade3, trade4)).when(stock2).getTrades();
 
-        when(stockRepository.findBySymbol("Stock1")).thenReturn(Optional.of(stock1));
-        when(stockRepository.findBySymbol("Stock2")).thenReturn(Optional.of(stock2));
-        when(stockRepository.findAll()).thenReturn(List.of(stock1, stock2));
+        when(stockRepository.findStockBySymbol("Stock1")).thenReturn(Optional.of(stock1));
+        when(stockRepository.findStockBySymbol("Stock2")).thenReturn(Optional.of(stock2));
+        when(stockRepository.findAllStocks()).thenReturn(List.of(stock1, stock2));
 
         double vwspStock1 = stockService.calculateVWSP("Stock1");
         double vwspStock2 = stockService.calculateVWSP("Stock2");

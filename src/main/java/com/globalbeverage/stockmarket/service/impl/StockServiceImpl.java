@@ -1,10 +1,11 @@
-package com.globalbeverage.stockmarket.service;
+package com.globalbeverage.stockmarket.service.impl;
 
 import com.globalbeverage.stockmarket.domain.Stock;
 import com.globalbeverage.stockmarket.domain.Trade;
 import com.globalbeverage.stockmarket.exception.InvalidPriceException;
 import com.globalbeverage.stockmarket.exception.StockNotFoundException;
 import com.globalbeverage.stockmarket.repository.StockRepository;
+import com.globalbeverage.stockmarket.service.StockService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,7 @@ public class StockServiceImpl implements StockService {
      */
     @Override
     public double calculateDividendYield(String symbol, double price) {
-        Stock stock = stockRepository.findBySymbol(symbol)
+        Stock stock = stockRepository.findStockBySymbol(symbol)
                 .orElseThrow(() -> {
                     logger.error("Stock with symbol {} not found.", symbol);
                     return new StockNotFoundException(symbol);
@@ -65,7 +66,7 @@ public class StockServiceImpl implements StockService {
      */
     @Override
     public double calculatePERatio(String symbol, double price) {
-        Stock stock = stockRepository.findBySymbol(symbol)
+        Stock stock = stockRepository.findStockBySymbol(symbol)
                 .orElseThrow(() -> {
                     logger.error("Stock with symbol {} not found.", symbol);
                     return new StockNotFoundException(symbol);
@@ -93,7 +94,7 @@ public class StockServiceImpl implements StockService {
      */
     @Override
     public double calculateVWSP(String symbol) {
-        Stock stock = stockRepository.findBySymbol(symbol)
+        Stock stock = stockRepository.findStockBySymbol(symbol)
                 .orElseThrow(() -> {
                     logger.error("Stock with symbol {} not found.", symbol);
                     return new StockNotFoundException(symbol);
@@ -125,7 +126,7 @@ public class StockServiceImpl implements StockService {
      */
     @Override
     public double calculateGBCEAllShareIndex() {
-        List<Stock> stocks = stockRepository.findAll();
+        List<Stock> stocks = stockRepository.findAllStocks();
         double productOfVWSP = 1.0;
         int count = 0;
 

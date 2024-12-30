@@ -5,7 +5,7 @@ import com.globalbeverage.stockmarket.domain.StockType;
 import com.globalbeverage.stockmarket.exception.InvalidPriceException;
 import com.globalbeverage.stockmarket.exception.StockNotFoundException;
 import com.globalbeverage.stockmarket.repository.StockRepository;
-import com.globalbeverage.stockmarket.service.StockServiceImpl;
+import com.globalbeverage.stockmarket.service.impl.StockServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,7 +32,7 @@ public class StockExceptionTest {
      */
     @Test
     void shouldThrowStockNotFoundExceptionWhenStockNotFound() {
-        when(stockRepository.findBySymbol("Coca Cola")).thenReturn(Optional.empty());
+        when(stockRepository.findStockBySymbol("Coca Cola")).thenReturn(Optional.empty());
 
         StockNotFoundException exception = assertThrows(StockNotFoundException.class, () -> {
             stockService.calculateDividendYield("Coca Cola", 100);
@@ -48,7 +48,7 @@ public class StockExceptionTest {
     @Test
     void shouldThrowInvalidPriceExceptionWhenPriceIsInvalid() {
         Stock mockStock = new Stock("Coca Cola", StockType.COMMON, 10.0, 0.0, 100.0);
-        when(stockRepository.findBySymbol("Coca Cola")).thenReturn(Optional.of(mockStock));
+        when(stockRepository.findStockBySymbol("Coca Cola")).thenReturn(Optional.of(mockStock));
 
         InvalidPriceException exception = assertThrows(InvalidPriceException.class, () -> {
             stockService.calculateDividendYield("Coca Cola", -50);
@@ -63,7 +63,7 @@ public class StockExceptionTest {
     @Test
     void shouldNotThrowExceptionForValidPrice() {
         Stock mockStock = new Stock("Coca Cola", StockType.COMMON, 10.0, 0.0, 100.0);
-        when(stockRepository.findBySymbol("Coca Cola")).thenReturn(Optional.of(mockStock));
+        when(stockRepository.findStockBySymbol("Coca Cola")).thenReturn(Optional.of(mockStock));
 
         assertDoesNotThrow(() -> {
             stockService.calculateDividendYield("Coca Cola", 100);
