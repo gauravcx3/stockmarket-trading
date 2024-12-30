@@ -54,7 +54,7 @@ public class TradeServiceImpl implements TradeService {
             throw new IllegalArgumentException("Price must be greater than 0 for buy trades");
         }
 
-        tradeRepository.save(trade);
+        tradeRepository.saveTrade(trade);
         logger.info("Trade recorded: {} - Price: {} Quantity: {}", trade.getStockSymbol(), trade.getPrice(), trade.getQuantity());
     }
 
@@ -68,7 +68,7 @@ public class TradeServiceImpl implements TradeService {
      */
     @Override
     public List<Trade> getTradesForStock(String stockSymbol) {
-        List<Trade> trades = tradeRepository.findByStockSymbol(stockSymbol);
+        List<Trade> trades = tradeRepository.findTradesBySymbol(stockSymbol);
         if (trades == null || trades.isEmpty()) {
             return new ArrayList<>();
         }
@@ -83,7 +83,7 @@ public class TradeServiceImpl implements TradeService {
      */
     @Override
     public Optional<List<Trade>> getTradesForStockOptional(String stockSymbol) {
-        List<Trade> trades = tradeRepository.findByStockSymbol(stockSymbol);
+        List<Trade> trades = tradeRepository.findTradesBySymbol(stockSymbol);
         if (trades.isEmpty()) {
             logger.warn("No trades found for stock: {}", stockSymbol);
             return Optional.empty();

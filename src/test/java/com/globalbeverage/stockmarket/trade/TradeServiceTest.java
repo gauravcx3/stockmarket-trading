@@ -41,11 +41,11 @@ public class TradeServiceTest {
         Stock stock = new Stock("Coca Cola", StockType.COMMON, 100, 0, 100);
         Trade trade = new Trade("Coca Cola", timestamp, 10, true, 50, stock);
 
-        when(tradeRepository.save(trade)).thenReturn(trade);
+        when(tradeRepository.saveTrade(trade)).thenReturn(trade);
 
         tradeService.recordTrade(trade);
 
-        verify(tradeRepository, times(1)).save(trade);
+        verify(tradeRepository, times(1)).saveTrade(trade);
     }
 
     /**
@@ -77,7 +77,7 @@ public class TradeServiceTest {
         Trade trade1 = new Trade("Coca Cola", timestamp, 10, true, 50, stock);
         Trade trade2 = new Trade("Coca Cola", timestamp, 20, false, 60, stock);
         List<Trade> trades = List.of(trade1, trade2);
-        when(tradeRepository.findByStockSymbol("Coca Cola")).thenReturn(trades);
+        when(tradeRepository.findTradesBySymbol("Coca Cola")).thenReturn(trades);
 
         List<Trade> fetchedTrades = tradeService.getTradesForStock("Coca Cola");
 
@@ -91,7 +91,7 @@ public class TradeServiceTest {
      */
     @Test
     void shouldReturnEmptyListWhenNoTradesFound() {
-        when(tradeRepository.findByStockSymbol("Coca Cola")).thenReturn(List.of());
+        when(tradeRepository.findTradesBySymbol("Coca Cola")).thenReturn(List.of());
 
         List<Trade> fetchedTrades = tradeService.getTradesForStock("Coca Cola");
 
@@ -125,11 +125,11 @@ public class TradeServiceTest {
         LocalDateTime timestamp = LocalDateTime.now();
         Stock stock = new Stock("Coca Cola", StockType.COMMON, 100, 0, 100);
         Trade trade = new Trade("Coca Cola", timestamp, 10, true, 50, stock);
-        when(tradeRepository.findByStockSymbol("Coca Cola")).thenReturn(List.of(trade));
+        when(tradeRepository.findTradesBySymbol("Coca Cola")).thenReturn(List.of(trade));
 
         tradeService.getTradesForStock("Coca Cola");
 
-        verify(tradeRepository, times(1)).findByStockSymbol("Coca Cola");
+        verify(tradeRepository, times(1)).findTradesBySymbol("Coca Cola");
     }
 
     /**
@@ -137,7 +137,7 @@ public class TradeServiceTest {
      */
     @Test
     void shouldReturnEmptyListWhenStockSymbolNotFound() {
-        when(tradeRepository.findByStockSymbol("NonExistentStock")).thenReturn(null);
+        when(tradeRepository.findTradesBySymbol("NonExistentStock")).thenReturn(null);
 
         List<Trade> fetchedTrades = tradeService.getTradesForStock("NonExistentStock");
 
