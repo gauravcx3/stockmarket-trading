@@ -46,12 +46,18 @@ This project is part of a StockMarket App Assignment for 2024. The goal of the p
 
 ## Code Structure
 
-- **src/main/java**: Contains the core classes for modeling stock, trade, and the stock market system.
-- **src/test/java**: Contains unit tests for the service and utility classes.
-- **com.globalbeverage.stockmarket.domain**: Classes related to Stock, Trade, and StockType.
-- **com.globalbeverage.stockmarket.service**: Contains business logic for recording trades and calculating stock metrics.
-- **com.globalbeverage.stockmarket.exception**: Custom exception classes.
-- **com.globalbeverage.stockmarket.repository**: Interfaces for data access (in-memory).
+- **`src/main/java`**: Contains the core classes for the stock market system.
+  - **`com.globalbeverage.stockmarket.config`**: Configuration classes and test data setup.
+  - **`com.globalbeverage.stockmarket.domain`**: Domain classes representing the core objects like stock and trade.
+  - **`com.globalbeverage.stockmarket.exception`**: Custom exceptions for handling errors.
+  - **`com.globalbeverage.stockmarket.mapper`**: Classes for mapping domain objects to other formats.
+  - **`com.globalbeverage.stockmarket.repository`**: Interfaces for data access (in-memory).
+  - **`com.globalbeverage.stockmarket.service`**: Business logic for stock market operations.
+
+- **`src/test/java`**: Contains unit tests.
+  - **`com.globalbeverage.stockmarket.config`**: Tests for configuration classes.
+  - **`com.globalbeverage.stockmarket.stock`**: Tests for stock-related functionality.
+  - **`com.globalbeverage.stockmarket.trade`**: Tests for trade-related functionality.
 
 ## Features
 
