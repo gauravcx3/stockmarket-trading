@@ -5,15 +5,16 @@ import com.globalbeverage.stockmarket.domain.Trade;
 import com.globalbeverage.stockmarket.exception.InvalidPriceException;
 import com.globalbeverage.stockmarket.exception.StockNotFoundException;
 import com.globalbeverage.stockmarket.repository.StockRepository;
+import com.globalbeverage.stockmarket.repository.TradeRepository;
 import com.globalbeverage.stockmarket.service.StockService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Implementation of the StockService interface for calculating stock-related financial metrics.
@@ -26,14 +27,17 @@ public class StockServiceImpl implements StockService {
     @Autowired
     private StockRepository stockRepository;
 
+    @Autowired
+    private TradeRepository tradeRepository;
+
     /**
-     * Calculates the dividend yield for a stock.
+     * Calculates the dividend yield for a given stock based on its type.
      *
      * @param symbol The stock's symbol.
-     * @param price The stock's current market price.
-     * @return The dividend yield.
-     * @throws StockNotFoundException if the stock is not found.
-     * @throws InvalidPriceException if the price is invalid (<= 0).
+     * @param price  The current market price of the stock.
+     * @return The calculated dividend yield.
+     * @throws StockNotFoundException If the stock with the given symbol is not found.
+     * @throws InvalidPriceException  If the given price is less than or equal to zero.
      */
     @Override
     public double calculateDividendYield(String symbol, double price) {
@@ -56,13 +60,13 @@ public class StockServiceImpl implements StockService {
     }
 
     /**
-     * Calculates the P/E ratio for a stock.
+     * Calculates the P/E (Price-to-Earnings) ratio for a given stock.
      *
      * @param symbol The stock's symbol.
-     * @param price The stock's current market price.
-     * @return The P/E ratio.
-     * @throws StockNotFoundException if the stock is not found.
-     * @throws InvalidPriceException if the price is invalid (<= 0).
+     * @param price  The current market price of the stock.
+     * @return The calculated P/E ratio.
+     * @throws StockNotFoundException If the stock with the given symbol is not found.
+     * @throws InvalidPriceException  If the given price is less than or equal to zero.
      */
     @Override
     public double calculatePERatio(String symbol, double price) {
@@ -86,11 +90,12 @@ public class StockServiceImpl implements StockService {
     }
 
     /**
-     * Calculates the VWAP (Volume-Weighted Average Price) for a stock based on trades in the last 5 minutes.
+     * Calculates the Volume Weighted Stock Price (VWSP) for a stock based on trades
+     * in the last 5 minutes.
      *
      * @param symbol The stock's symbol.
-     * @return The VWAP.
-     * @throws StockNotFoundException if the stock is not found.
+     * @return The calculated VWSP. Returns 0 if no trades are found within the last 5 minutes.
+     * @throws StockNotFoundException If the stock with the given symbol is not found.
      */
     @Override
     public double calculateVWSP(String symbol) {
@@ -100,42 +105,48 @@ public class StockServiceImpl implements StockService {
                     return new StockNotFoundException(symbol);
                 });
 
-        List<Trade> trades = stock.getTrades();
-        LocalDateTime fiveMinutesAgo = LocalDateTime.now().minus(5, ChronoUnit.MINUTES);
-        trades = trades.stream()
-                .filter(trade -> trade.getTimestamp().isAfter(fiveMinutesAgo))
-                .collect(Collectors.toList());
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime fiveMinutesAgo = now.minus(5, ChronoUnit.MINUTES);
 
-        if (trades.isEmpty()) return 0;
+        List<Trade> trades = tradeRepository.findTradesBySymbolAndTimestampBetween(symbol, fiveMinutesAgo, now);
 
-        double totalValue = 0;
-        int totalQuantity = 0;
-
-        for (Trade trade : trades) {
-            totalValue += trade.getPrice() * trade.getQuantity();
-            totalQuantity += trade.getQuantity();
+        if (trades.isEmpty()) {
+            logger.warn("No trades found for stock {} in the last 5 minutes.", symbol);
+            return 0;
         }
 
-        return totalValue / totalQuantity;
+        double totalValue = trades.stream()
+                .mapToDouble(trade -> trade.getPrice() * trade.getQuantity())
+                .sum();
+        int totalQuantity = trades.stream()
+                .mapToInt(Trade::getQuantity)
+                .sum();
+
+        return totalQuantity > 0 ? totalValue / totalQuantity : 0;
     }
 
     /**
-     * Calculates the GBCE All Share Index based on the geometric mean of VWAPs of all stocks.
+     * Calculates the GBCE All Share Index, which is the geometric mean of the VWSPs
+     * of all stocks in the market.
      *
-     * @return The GBCE All Share Index.
+     * @return The calculated GBCE All Share Index. Returns 0 if no stocks are available.
      */
     @Override
     public double calculateGBCEAllShareIndex() {
         List<Stock> stocks = stockRepository.findAllStocks();
-        double productOfVWSP = 1.0;
-        int count = 0;
 
-        for (Stock stock : stocks) {
-            double vwsp = calculateVWSP(stock.getSymbol());
-            productOfVWSP *= vwsp;
-            count++;
+        if (stocks.isEmpty()) {
+            logger.warn("No stocks available for GBCE All Share Index calculation.");
+            return 0;
         }
 
-        return (count > 0) ? Math.pow(productOfVWSP, 1.0 / count) : 0.0;
+        double productOfVWSP = stocks.stream()
+                .mapToDouble(stock -> {
+                    double vwsp = calculateVWSP(stock.getSymbol());
+                    return vwsp > 0 ? vwsp : 1;
+                })
+                .reduce(1.0, (a, b) -> a * b);
+
+        return Math.pow(productOfVWSP, 1.0 / stocks.size());
     }
 }

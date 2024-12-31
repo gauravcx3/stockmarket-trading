@@ -3,6 +3,7 @@ package com.globalbeverage.stockmarket.mapper;
 import com.globalbeverage.stockmarket.domain.Trade;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,6 +38,23 @@ public class TradeMapper {
         TypedQuery<Trade> query = entityManager.createQuery(
                 "SELECT t FROM Trade t WHERE t.stock.symbol = :symbol", Trade.class);
         query.setParameter("symbol", symbol);
+        return query.getResultList();
+    }
+
+    /**
+     * Finds all trades for a specific stock symbol within a given time range.
+     *
+     * @param symbol The stock symbol.
+     * @param startTime The start time of the range.
+     * @param endTime The end time of the range.
+     * @return A list of trades related to the given stock symbol within the time range.
+     */
+    public List<Trade> findTradesBySymbolAndTimestampBetween(String symbol, LocalDateTime startTime, LocalDateTime endTime) {
+        TypedQuery<Trade> query = entityManager.createQuery(
+                "SELECT t FROM Trade t WHERE t.stock.symbol = :symbol AND t.timestamp BETWEEN :startTime AND :endTime", Trade.class);
+        query.setParameter("symbol", symbol);
+        query.setParameter("startTime", startTime);
+        query.setParameter("endTime", endTime);
         return query.getResultList();
     }
 

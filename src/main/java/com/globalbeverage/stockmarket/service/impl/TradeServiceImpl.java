@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -43,15 +44,14 @@ public class TradeServiceImpl implements TradeService {
         Set<ConstraintViolation<Trade>> violations = validator.validate(trade);
         if (!violations.isEmpty()) {
             String violationMessages = violations.stream()
-                    .map(violation -> violation.getMessage())
+                    .map(ConstraintViolation::getMessage)
                     .collect(Collectors.joining(", "));
-
             logger.error("Invalid trade: {} - Violations found: {}", trade, violationMessages);
             throw new ConstraintViolationException("Trade validation failed", violations);
         }
 
         if (trade.isBuy() && trade.getPrice() <= 0) {
-            throw new IllegalArgumentException("Price must be greater than 0 for buy trades");
+            throw new IllegalArgumentException("Price must be greater than 0 for buy trades.");
         }
 
         tradeRepository.saveTrade(trade);
@@ -60,26 +60,44 @@ public class TradeServiceImpl implements TradeService {
 
     /**
      * Retrieves trades for a specific stock.
-     * Throws an exception if no trades are found.
      *
      * @param stockSymbol The stock symbol.
-     * @return List of trades.
-     * @throws StockNotFoundException if no trades exist for the stock.
+     * @return List of trades for the stock.
      */
     @Override
     public List<Trade> getTradesForStock(String stockSymbol) {
         List<Trade> trades = tradeRepository.findTradesBySymbol(stockSymbol);
         if (trades == null || trades.isEmpty()) {
+            logger.warn("No trades found for stock: {}", stockSymbol);
             return new ArrayList<>();
         }
+        logger.info("Retrieved {} trades for stock: {}", trades.size(), stockSymbol);
         return trades;
     }
 
     /**
-     * Retrieves trades for a specific stock, returning an empty list if none exist.
+     * Retrieves trades for a specific stock within a time range.
      *
      * @param stockSymbol The stock symbol.
-     * @return List of trades or an empty list if none found.
+     * @param start       The start of the time range.
+     * @param end         The end of the time range.
+     * @return List of trades within the time range.
+     */
+    public List<Trade> getTradesForStockWithinTimeRange(String stockSymbol, LocalDateTime start, LocalDateTime end) {
+        List<Trade> trades = tradeRepository.findTradesBySymbolAndTimestampBetween(stockSymbol, start, end);
+        if (trades.isEmpty()) {
+            logger.warn("No trades found for stock: {} within the time range {} to {}", stockSymbol, start, end);
+            return new ArrayList<>();
+        }
+        logger.info("Retrieved {} trades for stock: {} within the time range {} to {}", trades.size(), stockSymbol, start, end);
+        return trades;
+    }
+
+    /**
+     * Retrieves trades for a specific stock, returning an optional.
+     *
+     * @param stockSymbol The stock symbol.
+     * @return Optional containing a list of trades or empty if none found.
      */
     @Override
     public Optional<List<Trade>> getTradesForStockOptional(String stockSymbol) {

@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,6 +52,22 @@ public class TradeRepositoryImpl implements TradeRepository {
         logger.info("Finding trades for stock with symbol: {}", symbol);
         List<Trade> trades = tradeMapper.findTradesBySymbol(symbol);
         logger.info("Found {} trades for stock symbol: {}", trades.size(), symbol);
+        return trades;
+    }
+
+    /**
+     * Finds trades for a specific stock symbol within a specific time range.
+     *
+     * @param symbol The stock symbol.
+     * @param startTime The start time of the range.
+     * @param endTime The end time of the range.
+     * @return A list of trades within the specified time range for the stock symbol.
+     */
+    @Override
+    public List<Trade> findTradesBySymbolAndTimestampBetween(String symbol, LocalDateTime startTime, LocalDateTime endTime) {
+        logger.info("Finding trades for stock symbol: {} between {} and {}", symbol, startTime, endTime);
+        List<Trade> trades = tradeMapper.findTradesBySymbolAndTimestampBetween(symbol, startTime, endTime);
+        logger.info("Found {} trades for stock symbol: {} in the specified time range", trades.size(), symbol);
         return trades;
     }
 

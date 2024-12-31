@@ -3,6 +3,7 @@ package com.globalbeverage.stockmarket.trade;
 import com.globalbeverage.stockmarket.domain.Trade;
 import com.globalbeverage.stockmarket.domain.Stock;
 import com.globalbeverage.stockmarket.domain.StockType;
+import com.globalbeverage.stockmarket.repository.StockRepository;
 import com.globalbeverage.stockmarket.repository.TradeRepository;
 import com.globalbeverage.stockmarket.service.impl.TradeServiceImpl;
 import jakarta.validation.ConstraintViolationException;
@@ -27,6 +28,9 @@ public class TradeServiceTest {
 
     @Mock
     private TradeRepository tradeRepository;
+
+    @Mock
+    private StockRepository stockRepository;
 
     @InjectMocks
     private TradeServiceImpl tradeService;

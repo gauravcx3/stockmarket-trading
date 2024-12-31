@@ -4,6 +4,7 @@ import com.globalbeverage.stockmarket.domain.Stock;
 import com.globalbeverage.stockmarket.domain.StockType;
 import com.globalbeverage.stockmarket.domain.Trade;
 import com.globalbeverage.stockmarket.exception.StockNotFoundException;
+import com.globalbeverage.stockmarket.repository.TradeRepository;
 import com.globalbeverage.stockmarket.service.impl.StockServiceImpl;
 import com.globalbeverage.stockmarket.repository.StockRepository;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +33,9 @@ public class StockServiceTest {
 
     @Mock
     private StockRepository stockRepository;
+
+    @Mock
+    private TradeRepository tradeRepository;
 
     @InjectMocks
     private StockServiceImpl stockService;
@@ -74,14 +79,21 @@ public class StockServiceTest {
 
     /**
      * Test the calculation of the volume-weighted average price (VWSP).
-     * Verifies that the VWSP is correctly calculated based on trades for the stock.
+     * Verifies that the VWSP is correctly calculated based on trades for the stock,
+     * and that the VWSP is 0 when there are no trades for the stock.
      */
     @Test
     @MockitoSettings(strictness = Strictness.LENIENT)
     void shouldHandleNoTradesForVWSP() {
         Stock stock = new Stock("Pepsi", StockType.COMMON, 100, 0, 100);
         when(stockRepository.findStockBySymbol("Pepsi")).thenReturn(Optional.of(stock));
+
+        when(tradeRepository.findTradesBySymbolAndTimestampBetween(
+                eq("Pepsi"), any(), any()))
+                .thenReturn(Collections.emptyList());
+
         double vwsp = stockService.calculateVWSP("Pepsi");
+
         assertEquals(0, vwsp, 0.001);
     }
 
@@ -101,23 +113,29 @@ public class StockServiceTest {
 
     /**
      * Test the calculation of VWSP (Volume-Weighted Stock Price).
-     * Verifies that VWSP is correctly calculated.
+     * Verifies that VWSP is correctly calculated based on trades for the stock.
      */
     @Test
     void shouldCalculateVWSP() {
-        Stock stock1 = spy(new Stock("Stock1", StockType.COMMON, 0, 0, 100));
-        Stock stock2 = spy(new Stock("Stock2", StockType.PREFERRED, 5, 0.05, 100));
+        Stock stock1 = new Stock("Stock1", StockType.COMMON, 0, 0, 100);
+        Stock stock2 = new Stock("Stock2", StockType.PREFERRED, 5, 0.05, 100);
 
         when(stockRepository.findStockBySymbol("Stock1")).thenReturn(Optional.of(stock1));
         when(stockRepository.findStockBySymbol("Stock2")).thenReturn(Optional.of(stock2));
 
-        Trade trade1 = new Trade("Stock1", LocalDateTime.now().minusMinutes(3), 10, true, 100, stock1);
-        Trade trade2 = new Trade("Stock1", LocalDateTime.now().minusMinutes(1), 20, true, 110, stock1);
-        Trade trade3 = new Trade("Stock2", LocalDateTime.now().minusMinutes(3), 5, true, 120, stock2);
-        Trade trade4 = new Trade("Stock2", LocalDateTime.now().minusMinutes(1), 15, true, 130, stock2);
+        LocalDateTime now = LocalDateTime.now();
+        Trade trade1 = new Trade("Stock1", now.minusMinutes(3), 10, true, 100, stock1);
+        Trade trade2 = new Trade("Stock1", now.minusMinutes(1), 20, true, 110, stock1);
+        Trade trade3 = new Trade("Stock2", now.minusMinutes(3), 5, true, 120, stock2);
+        Trade trade4 = new Trade("Stock2", now.minusMinutes(1), 15, true, 130, stock2);
 
-        doReturn(List.of(trade1, trade2)).when(stock1).getTrades();
-        doReturn(List.of(trade3, trade4)).when(stock2).getTrades();
+        when(tradeRepository.findTradesBySymbolAndTimestampBetween(
+                eq("Stock1"), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(List.of(trade1, trade2));
+
+        when(tradeRepository.findTradesBySymbolAndTimestampBetween(
+                eq("Stock2"), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(List.of(trade3, trade4));
 
         double vwspStock1 = stockService.calculateVWSP("Stock1");
         double vwspStock2 = stockService.calculateVWSP("Stock2");
@@ -132,26 +150,35 @@ public class StockServiceTest {
      */
     @Test
     void shouldCalculateGBCEAllShareIndex() {
-        Stock stock1 = spy(new Stock("Stock1", StockType.COMMON, 0, 0, 100));
-        Stock stock2 = spy(new Stock("Stock2", StockType.PREFERRED, 5, 0.05, 100));
-
-        Trade trade1 = new Trade("Stock1", LocalDateTime.now().minusMinutes(3), 10, true, 100, stock1);
-        Trade trade2 = new Trade("Stock1", LocalDateTime.now().minusMinutes(1), 20, true, 110, stock1);
-        Trade trade3 = new Trade("Stock2", LocalDateTime.now().minusMinutes(3), 5, true, 120, stock2);
-        Trade trade4 = new Trade("Stock2", LocalDateTime.now().minusMinutes(1), 15, true, 130, stock2);
-
-        doReturn(List.of(trade1, trade2)).when(stock1).getTrades();
-        doReturn(List.of(trade3, trade4)).when(stock2).getTrades();
+        Stock stock1 = new Stock("Stock1", StockType.COMMON, 0, 0, 100);
+        Stock stock2 = new Stock("Stock2", StockType.PREFERRED, 5, 0.05, 100);
 
         when(stockRepository.findStockBySymbol("Stock1")).thenReturn(Optional.of(stock1));
         when(stockRepository.findStockBySymbol("Stock2")).thenReturn(Optional.of(stock2));
         when(stockRepository.findAllStocks()).thenReturn(List.of(stock1, stock2));
 
+        LocalDateTime now = LocalDateTime.now();
+        Trade trade1 = new Trade("Stock1", now.minusMinutes(3), 10, true, 100, stock1);
+        Trade trade2 = new Trade("Stock1", now.minusMinutes(1), 20, true, 110, stock1);
+        Trade trade3 = new Trade("Stock2", now.minusMinutes(3), 5, true, 120, stock2);
+        Trade trade4 = new Trade("Stock2", now.minusMinutes(1), 15, true, 130, stock2);
+
+        when(tradeRepository.findTradesBySymbolAndTimestampBetween(
+                eq("Stock1"), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(List.of(trade1, trade2));
+
+        when(tradeRepository.findTradesBySymbolAndTimestampBetween(
+                eq("Stock2"), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(List.of(trade3, trade4));
+
+        // Calculate VWSP for both stocks
         double vwspStock1 = stockService.calculateVWSP("Stock1");
         double vwspStock2 = stockService.calculateVWSP("Stock2");
 
+        // Calculate the GBCE All Share Index
         double gbceAllShareIndex = stockService.calculateGBCEAllShareIndex();
 
+        // Calculate expected index based on VWSPs
         double expectedIndex = Math.pow(vwspStock1 * vwspStock2, 1.0 / 2);
         assertEquals(expectedIndex, gbceAllShareIndex, 0.001);
     }

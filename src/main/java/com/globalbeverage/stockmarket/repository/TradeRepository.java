@@ -2,6 +2,7 @@ package com.globalbeverage.stockmarket.repository;
 
 import com.globalbeverage.stockmarket.domain.Trade;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,4 +56,14 @@ public interface TradeRepository {
      * @param id The ID of the trade to be deleted.
      */
     void deleteTradeById(Long id);
+
+    /**
+     * Finds trades for a specific stock symbol within a specified time range.
+     *
+     * @param symbol The stock symbol.
+     * @param start The start of the time range.
+     * @param end The end of the time range.
+     * @return A list of trades matching the criteria.
+     */
+    List<Trade> findTradesBySymbolAndTimestampBetween(String symbol, LocalDateTime start, LocalDateTime end);
 }
