@@ -187,7 +187,7 @@ public class DataLoader {
             batch.add(stock);
             if (++count % BATCH_SIZE == 0) {
                 logger.info("Saving batch of " + batch.size() + " stocks to the repository.");
-                stockRepository.saveAllStocks(batch); // Assuming saveAll is a method in StockRepository
+                stockRepository.saveAllStocks(batch);
                 batch.clear();
             }
         }

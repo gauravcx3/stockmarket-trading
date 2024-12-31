@@ -83,7 +83,7 @@ public class TradeRepositoryImpl implements TradeRepository {
         if (trade.getId() == null) {
             return tradeMapper.saveTrade(trade);
         } else {
-            return tradeMapper.saveTrade(trade); // update is handled inside the saveTrade method.
+            return tradeMapper.saveTrade(trade);
         }
     }
 
